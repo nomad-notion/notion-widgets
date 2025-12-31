@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pomodoro Timer (Notion Style)</title>
+  <style>
+    /* 1. 폰트 및 기본 설정 (노션 기본 폰트) */
+    body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100vh;
+      background-color: transparent;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+      display: flex; justify-content: center; align-items: center;
+      overflow: hidden;
+      color: #37352F; /* 노션 기본 텍스트 색상 */
+    }
+
+    /* 2. 메인 컨테이너 (참고 이미지 색상 적용) */
+    .container {
+      width: 95%; max-width: 400px;
+      background-color: #F7F6F3; /* 노션 회색 배경 (크림 베이지 톤) */
+      border: 1px solid rgba(55, 53, 47, 0.09);
+      border-radius: 12px;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      text-align: center; position: relative;
+      padding: 30px; box-sizing: border-box;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    /* 3. 타이머 표시 영역 */
+    .timer-display {
+      font-size: 4rem;
+      font-weight: 700;
+      color: #37352F;
+      font-variant-numeric: tabular-nums; /* 숫자가 흔들리지 않게 고정 */
+      margin-bottom: 5px;
+    }
+
+    .status-text {
+      font-size: 1rem;
+      color: rgba(55, 53, 47, 0.6); /* 보조 텍스트 색상 */
+      font-weight: 500;
+      margin-bottom: 25px;
+    }
+
+    /* 4. 원형 프로그레스 바 (SVG 활용) */
+    .progress-ring {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) rotate(-90deg); /* 중앙 정렬 및 시작점 변경 */
+      width: 280px; height: 280px;
+      pointer-events: none; /* 클릭 방지 */
+    }
+    .progress-ring__circle {
+      transition: stroke-dashoffset 0.35s;
+      transform-origin: 50% 50%;
+      fill: transparent;
+      stroke-width: 8; /* 게이지 두께 */
+    }
+    .progress-ring__bg {
+      stroke: rgba(55, 53, 47, 0.08); /* 배경색 (연한 회색) */
+    }
+    .progress-ring__fill {
+      stroke: #4A7C59; /* 포인트 색상 (짙은 녹색) */
+      stroke-linecap: round; /* 끝부분 둥글게 */
+    }
+
+    /* 5. 버튼 그룹 */
+    .btn-group {
+      display: flex;
+      gap: 15px;
+      z-index: 10; /* 게이지보다 위에 오도록 */
+      margin-top: 20px; /* 타이머와 간격 */
+    }
+
+    .btn {
+      padding: 10px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      transition: all 0.2s ease;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* 시작/일시정지 버튼 (주황색 포인트) */
+    .btn-main {
+      background-color: #F28C28; /* 주황색 */
+      color: white;
+      box-shadow: 0 2px 4px rgba(242, 140, 40, 0.2);
+    }
+    .btn-main:hover { background-color: #E07B1F; }
+    .btn-main:active { transform: scale(0.98); }
+
+    /* 리셋 버튼 (회색) */
+    .btn-reset {
+      background-color: transparent;
+      border: 1px solid rgba(55, 53, 47, 0.16);
+      color: #37352F;
+    }
+    .btn-reset:hover { background-color: rgba(55, 53, 47, 0.04); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <svg class="progress-ring" width="280" height="280">
+      <circle class="progress-ring__circle progress-ring__bg" r="130" cx="140" cy="140"/>
+      <circle class="progress-ring__circle progress-ring__fill" r="130" cx="140" cy="140"/>
+    </svg>
+
+    <div class="timer-display" id="time-display">25:00</div>
+    <div class="status-text" id="status-text">Focus time!</div>
+
+    <div class="btn-group">
+      <button class="btn btn-main" id="start-btn">
+        <span id="start-icon">▶</span> <span id="start-text">Start</span>
+      </button>
+      <button class="btn btn-reset" id="reset-btn">↺ Reset</button>
+    </div>
+  </div>
+
+  <script>
+    /* === 설정 === */
+    const FOCUS_TIME = 25 * 60; // 25분 (초 단위)
+    const BREAK_TIME = 5 * 60;  // 5분 (초 단위)
+    const GREEN_COLOR = '#4A7C59'; // 집중 색상
+    const ORANGE_COLOR = '#F28C28'; // 휴식 색상
+
+    /* === 상태 변수 === */
+    let timeLeft = FOCUS_TIME;
+    let isRunning = false;
+    let isFocusMode = true; // true: 집중, false: 휴식
+    let timerId = null;
+
+    /* === DOM 요소 === */
+    const timeDisplay = document.getElementById('time-display');
+    const statusText = document.getElementById('status-text');
+    const startBtn = document.getElementById('start-btn');
+    const startText = document.getElementById('start-text');
+    const startIcon = document.getElementById('start-icon');
+    const resetBtn = document.getElementById('reset-btn');
+    const progressFill = document.querySelector('.progress-ring__fill');
+
+    /* === 프로그레스 바 초기화 === */
+    const radius = progressFill.r.baseVal.value;
+    const circumference = 2 * Math.PI * radius;
+    progressFill.style.strokeDasharray = `${circumference} ${circumference}`;
+    progressFill.style.strokeDashoffset = 0;
+
+    /* === 함수: 시간 표시 업데이트 === */
+    function updateDisplay() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timeDisplay.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+      // 게이지 업데이트
+      const totalTime = isFocusMode ? FOCUS_TIME : BREAK_TIME;
+      const offset = circumference - (timeLeft / totalTime) * circumference;
+      progressFill.style.strokeDashoffset = offset;
+    }
+
+    /* === 함수: 타이머 로직 === */
+    function tick() {
+      timeLeft--;
+      updateDisplay();
+
+      if (timeLeft <= 0) {
+        clearInterval(timerId);
+        isRunning = false;
+        // 모드 전환 (집중 <-> 휴식)
+        isFocusMode = !isFocusMode;
+        timeLeft = isFocusMode ? FOCUS_TIME : BREAK_TIME;
+        
+        // 상태 및 색상 업데이트
+        statusText.innerText = isFocusMode ? "Focus time!" : "Take a break ☕";
+        progressFill.style.stroke = isFocusMode ? GREEN_COLOR : ORANGE_COLOR;
+        
+        updateDisplay();
+        updateBtnState();
+        
+        // 알림 (선택사항: 소리나 브라우저 알림 추가 가능)
+        // alert(isFocusMode ? "휴식 끝! 다시 집중해볼까요?" : "고생하셨어요! 잠시 쉬세요.");
+      }
+    }
+
+    /* === 함수: 버튼 상태 업데이트 === */
+    function updateBtnState() {
+      if (isRunning) {
+        startText.innerText = "Pause";
+        startIcon.innerText = "❚❚";
+      } else {
+        startText.innerText = "Start";
+        startIcon.innerText = "▶";
+      }
+    }
+
+    /* === 이벤트 리스너 === */
+    // 시작/일시정지 버튼
+    startBtn.addEventListener('click', () => {
+      if (isRunning) {
+        clearInterval(timerId);
+        isRunning = false;
+      } else {
+        timerId = setInterval(tick, 1000);
+        isRunning = true;
+      }
+      updateBtnState();
+    });
+
+    // 리셋 버튼
+    resetBtn.addEventListener('click', () => {
+      clearInterval(timerId);
+      isRunning = false;
+      isFocusMode = true; // 항상 집중 모드로 리셋
+      timeLeft = FOCUS_TIME;
+      statusText.innerText = "Focus time!";
+      progressFill.style.stroke = GREEN_COLOR;
+      updateDisplay();
+      updateBtnState();
+    });
+
+    /* === 초기화 === */
+    updateDisplay(); // 처음 화면 그리기
+  </script>
+</body>
+</html>
