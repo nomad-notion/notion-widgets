@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>One Focus Widget (KR)</title>
+  <title>One Focus Widget (Final)</title>
   <style>
-    /* 1. 폰트 및 기본 설정 */
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap'); /* 한글 명조체 */
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap');
 
     html, body {
       margin: 0;
@@ -14,19 +13,18 @@
       width: 100%;
       height: 100vh;
       background-color: transparent;
-      font-family: 'Noto Serif KR', serif; /* 한글 명조체 적용 */
+      font-family: 'Noto Serif KR', serif;
       display: flex;
       justify-content: center;
       align-items: center;
       overflow: hidden;
     }
 
-    /* 2. 컨테이너 디자인 */
     .container {
       width: 95%;
       height: 90%;
-      background-color: #F2EBE3; /* 크림 베이지 */
-      color: #4A4A4A; /* 진한 고동색 */
+      background-color: #F2EBE3;
+      color: #4A4A4A;
       border-radius: 15px;
       display: flex;
       flex-direction: column;
@@ -39,31 +37,30 @@
       box-sizing: border-box;
     }
 
-    /* 3. 날짜 및 시간 (상단 추가됨) */
     .datetime {
       position: absolute;
-      top: 25px; /* 상단 여백 */
+      top: 25px;
       font-size: 0.9rem;
       opacity: 0.7;
-      font-family: sans-serif; /* 숫자는 고딕이 깔끔 */
+      font-family: sans-serif;
       letter-spacing: -0.5px;
     }
 
-    /* 4. 입력 화면 */
+    /* 입력 모드 */
     #input-section {
       display: flex;
       flex-direction: column;
       align-items: center;
       width: 100%;
-      margin-top: 20px; /* 시계 공간 확보 */
+      margin-top: 20px;
     }
 
     .question {
-      font-size: 1.3rem; /* 한글이라 조금 키움 */
+      font-size: 1.3rem;
       margin-bottom: 1.5rem;
       font-weight: bold;
       opacity: 0.9;
-      word-break: keep-all; /* 단어 끊김 방지 */
+      word-break: keep-all;
     }
 
     input[type="text"] {
@@ -79,7 +76,7 @@
       outline: none;
       margin-bottom: 2rem;
     }
-
+    
     input::placeholder {
       color: #aaa;
       font-size: 1rem;
@@ -91,7 +88,7 @@
       font-family: sans-serif;
     }
 
-    /* 5. 결과 화면 */
+    /* 전시 모드 */
     #display-section {
       display: none;
       flex-direction: column;
@@ -136,7 +133,6 @@
       opacity: 1;
     }
 
-    /* 6. 서명 */
     .signature {
       position: absolute;
       bottom: 10px;
@@ -148,6 +144,51 @@
       letter-spacing: 0.05rem;
       text-transform: uppercase;
     }
+
+    /* ▼▼▼ 커스텀 팝업(모달) 디자인 추가 ▼▼▼ */
+    #custom-modal {
+      display: none; /* 평소엔 숨김 */
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(242, 235, 227, 0.95); /* 배경색과 같은 톤으로 덮음 */
+      border-radius: 15px;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .modal-msg {
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+
+    .modal-btn-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      padding: 8px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-family: sans-serif;
+      font-size: 0.9rem;
+      border: 1px solid #4A4A4A;
+    }
+
+    .btn-yes {
+      background-color: #4A4A4A;
+      color: #F2EBE3;
+    }
+    
+    .btn-no {
+      background-color: transparent;
+      color: #4A4A4A;
+    }
+    /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
 
   </style>
 </head>
@@ -166,42 +207,44 @@
     <div id="display-section">
       <div class="mission-label">오늘의 미션</div>
       <div class="mission-text" id="goalDisplay"></div>
-      <button class="finish-btn" onclick="resetGoal()">완료했습니다! (초기화)</button>
+      <button class="finish-btn" onclick="openModal()">완료했습니다! (초기화)</button>
     </div>
 
+    <div id="custom-modal">
+      <div class="modal-msg">정말 목표를 초기화할까요?</div>
+      <div class="modal-btn-group">
+        <button class="modal-btn btn-yes" onclick="confirmReset()">네</button>
+        <button class="modal-btn btn-no" onclick="closeModal()">아니오</button>
+      </div>
+    </div>
     <div class="signature">NOMADPLANNER</div>
 
   </div>
 
   <script>
-    /* 1. 시계 기능 (한국어 포맷) */
+    /* 시계 */
     function updateClock() {
       const now = new Date();
       const month = now.getMonth() + 1;
       const date = now.getDate();
-      
       let hours = now.getHours();
       let minutes = now.getMinutes();
       const ampm = hours >= 12 ? '오후' : '오전';
-      
       hours = hours % 12;
-      hours = hours ? hours : 12; // 0시는 12시로 표시
-      minutes = minutes < 10 ? '0' + minutes : minutes; // 1분 -> 01분
-
-      // 문구: "오늘은 12월 31일, 오후 7시 24분입니다"
+      hours = hours ? hours : 12; 
+      minutes = minutes < 10 ? '0' + minutes : minutes; 
       const timeString = `오늘은 ${month}월 ${date}일, ${ampm} ${hours}시 ${minutes}분입니다`;
-      
       document.getElementById('clock').innerText = timeString;
     }
+    setInterval(updateClock, 1000);
+    updateClock();
 
-    setInterval(updateClock, 1000); // 1초마다 갱신
-    updateClock(); // 즉시 실행
-
-    /* 2. 원픽 위젯 기능 (기존과 동일) */
+    /* 원픽 기능 */
     const inputSection = document.getElementById('input-section');
     const displaySection = document.getElementById('display-section');
     const goalInput = document.getElementById('goalInput');
     const goalDisplay = document.getElementById('goalDisplay');
+    const customModal = document.getElementById('custom-modal');
 
     window.onload = function() {
       const savedGoal = localStorage.getItem('myOneFocus');
@@ -210,36 +253,7 @@
       } else {
         showInputMode();
       }
-      updateClock(); // 로드시 시계 한번 더 체크
+      updateClock();
     };
 
-    goalInput.addEventListener('keypress', function (e) {
-      if (e.key === 'Enter' && goalInput.value.trim() !== "") {
-        const goal = goalInput.value;
-        localStorage.setItem('myOneFocus', goal);
-        showDisplayMode(goal);
-      }
-    });
-
-    function showInputMode() {
-      inputSection.style.display = 'flex';
-      displaySection.style.display = 'none';
-      goalInput.value = "";
-      goalInput.focus();
-    }
-
-    function showDisplayMode(text) {
-      inputSection.style.display = 'none';
-      displaySection.style.display = 'flex';
-      goalDisplay.innerText = text;
-    }
-
-    function resetGoal() {
-      if(confirm("정말 완료하셨나요? 목표를 초기화합니다.")) {
-        localStorage.removeItem('myOneFocus');
-        showInputMode();
-      }
-    }
-  </script>
-</body>
-</html>
+    goalInput.addEventListener('keypress', function (e
