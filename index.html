@@ -6,21 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Calendar</title>
   <style>
-    /* CSS: 디자인 영역 (원본 디자인 유지) */
+    /* CSS: 디자인 영역 */
     html, body {
-      background-color: #ffffff; /* 기본 배경 */
-      font-family: 'Times New Roman', serif; /* 세리프 폰트 */
+      background-color: transparent; /* 노션 배경에 자연스럽게 녹아들도록 투명 처리 */
+      font-family: 'Times New Roman', serif; /* 세리프 폰트 유지 */
       margin: 0;
       padding: 0;
       /* 화면 크기에 맞춰 비율 자동 조절 */
       font-size: calc(100vw / 10); 
     }
     
-    /* 다크모드 대응 */
-    @media (prefers-color-scheme: dark) {
-      html, body { background-color: #191919; }
-    }
-
+    /* 위젯 전체 박스 디자인 */
     .container {
       width: 9.2rem; /* 화면 꽉 차게 */
       margin: 0 auto;
@@ -28,12 +24,17 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: #000000; /* 위젯 배경: 블랙 */
-      color: rgb(255, 255, 255); /* 글씨: 화이트 */
+      
+      /* ▼▼▼ 여기 색상을 바꿨습니다! ▼▼▼ */
+      background: #F2EBE3; /* 배경색: 따뜻한 크림 베이지 */
+      color: #4A4A4A; /* 글씨색: 진한 고동색 */
+      /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
+
       border-radius: .4rem;
       box-sizing: border-box;
       padding: .4rem;
       overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* 살짝 그림자를 주어 입체감 추가 */
     }
 
     #month {
@@ -42,6 +43,7 @@
       text-align: right;
       margin: 0;
       margin-bottom: 0.2rem;
+      opacity: 0.8; /* 월 이름은 살짝 연하게 */
     }
 
     .week-days {
@@ -55,7 +57,7 @@
       font-weight: bold;
       font-size: .4rem;
       margin-bottom: .2rem;
-      opacity: 0.8;
+      opacity: 0.6; /* 요일 헤더(S M T...)는 더 연하게 */
     }
 
     .week-days.week {
@@ -71,13 +73,14 @@
       text-align: center;
     }
 
-    /* 오늘 날짜 표시 */
+    /* ▼▼▼ 오늘 날짜 표시 디자인 변경 ▼▼▼ */
     .active {
-      background-color: rgba(255, 255, 255, 1);
+      background-color: #CBB7A3; /* 배경: 템플릿 구분선과 비슷한 따뜻한 브라운 */
+      color: #FFFFFF; /* 글씨: 화이트 */
       border-radius: 50%;
-      color: #000000;
       font-weight: bold;
     }
+    /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
 
     /* 왼쪽 큰 날짜 영역 */
     #d-day {
@@ -86,7 +89,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      border-right: 1px solid #333;
+      border-right: 1px solid rgba(74, 74, 74, 0.2); /* 구분선도 은은한 고동색으로 */
       margin-right: 0.2rem;
       padding-right: 0.2rem;
     }
@@ -94,6 +97,7 @@
       font-size: .64rem;
       margin: 0;
       font-weight: normal;
+      opacity: 0.8;
     }
     #d-day h1 {
       font-size: 2.2rem;
@@ -123,7 +127,7 @@
   </div>
 
 <script type="text/javascript">
-  // JS: 기능 구현 (외부 의존성 제거됨)
+  // JS: 기능 구현 (날짜 계산 로직 - 이전과 동일)
   
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const week_days_full = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
