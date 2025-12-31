@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simple Pomodoro</title>
+  <title>Dual Timer Widget</title>
   <style>
     /* 1. 기본 설정 */
     body {
@@ -18,7 +18,7 @@
 
     /* 2. 컨테이너 */
     .container {
-      width: 90%; max-width: 300px;
+      width: 90%; max-width: 320px;
       background-color: #F7F6F3;
       border: 1px solid rgba(55, 53, 47, 0.09);
       border-radius: 12px;
@@ -28,201 +28,112 @@
       padding: 24px; box-sizing: border-box;
       box-shadow: 0 2px 6px rgba(0,0,0,0.02);
       
-      /* 혹시라도 숨겨질까봐 강제로 보이게 설정 */
-      visibility: visible !important;
-      opacity: 1 !important;
+      /* 강제 표시 (에러 방지) */
+      visibility: visible !important; opacity: 1 !important;
+      min-height: 220px; /* 높이 고정으로 안정감 주기 */
     }
 
-    /* 3. 타이머 숫자 */
-    .timer-display {
-      font-size: 3.5rem;
-      font-weight: 700;
-      color: #37352F;
-      font-variant-numeric: tabular-nums;
-      line-height: 1;
+    /* === 화면 1: 선택 메뉴 === */
+    #selection-screen {
+      display: flex; flex-direction: column;
+      width: 100%; gap: 12px;
+    }
+
+    .menu-title {
+      font-size: 1.1rem; font-weight: 600;
+      margin-bottom: 10px; color: #37352F;
+    }
+
+    .select-btn {
+      padding: 12px; border-radius: 8px;
+      border: 1px solid rgba(55, 53, 47, 0.16);
+      background-color: white; color: #37352F;
+      font-size: 1rem; font-weight: 500; cursor: pointer;
+      transition: all 0.2s; display: flex;
+      align-items: center; justify-content: center; gap: 8px;
+    }
+    .select-btn:hover { background-color: rgba(55, 53, 47, 0.04); transform: translateY(-1px); }
+
+    /* === 화면 2: 타이머 화면 === */
+    #timer-screen {
+      display: none; /* 초기엔 숨김 */
+      flex-direction: column; align-items: center; width: 100%;
+    }
+
+    /* 상단 헤더 (뒤로가기 + 모드이름) */
+    .timer-header {
+      width: 100%; display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 15px;
     }
+    .back-btn {
+      font-size: 0.8rem; color: rgba(55, 53, 47, 0.4);
+      cursor: pointer; background: none; border: none; padding: 0;
+    }
+    .back-btn:hover { color: #37352F; text-decoration: underline; }
+    
+    .mode-badge {
+      font-size: 0.75rem; font-weight: 700;
+      padding: 2px 8px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
 
-    /* 4. 미니 게이지 */
+    /* 타이머 디스플레이 */
+    .timer-display {
+      font-size: 3.5rem; font-weight: 700;
+      color: #37352F; font-variant-numeric: tabular-nums;
+      line-height: 1; margin-bottom: 15px;
+    }
+
+    /* 미니 게이지 */
     .gauge-wrapper {
-      position: relative;
-      width: 40px; height: 40px;
-      margin-bottom: 20px;
-      display: flex; justify-content: center; align-items: center;
+      position: relative; width: 40px; height: 40px;
+      margin-bottom: 20px; display: flex; justify-content: center; align-items: center;
     }
-
-    .progress-ring {
-      transform: rotate(-90deg);
-      width: 100%; height: 100%;
-    }
-    .progress-ring__circle {
-      fill: transparent;
-      stroke-width: 6;
-    }
-    .progress-ring__bg {
-      stroke: rgba(55, 53, 47, 0.1);
-    }
+    .progress-ring { transform: rotate(-90deg); width: 100%; height: 100%; }
+    .progress-ring__circle { fill: transparent; stroke-width: 6; }
+    .progress-ring__bg { stroke: rgba(55, 53, 47, 0.1); }
     .progress-ring__fill {
-      stroke: #4A7C59; /* 기본 녹색 */
-      stroke-linecap: round;
-      transition: stroke-dashoffset 0.35s;
-      
-      /* JS 에러나도 기본 모양은 잡히게 설정 (r=17일 때 둘레 약 106.8) */
-      stroke-dasharray: 107 107;
-      stroke-dashoffset: 0;
+      stroke-linecap: round; transition: stroke-dashoffset 0.35s;
+      stroke-dasharray: 107 107; stroke-dashoffset: 0;
     }
 
-    /* 5. 버튼 그룹 */
-    .btn-group {
-      display: flex; gap: 10px; width: 100%; justify-content: center;
-    }
-
+    /* 컨트롤 버튼 */
+    .btn-group { display: flex; gap: 10px; width: 100%; }
     .btn {
       padding: 8px 16px; border-radius: 6px; cursor: pointer;
       font-family: inherit; font-size: 0.9rem; font-weight: 600;
       border: none; transition: all 0.2s ease; flex: 1;
     }
-
-    .btn-main { background-color: #F28C28; color: white; } /* 주황색 */
-    .btn-main:hover { background-color: #E07B1F; }
-    
     .btn-reset {
       background-color: white; border: 1px solid rgba(55, 53, 47, 0.15); color: #37352F;
     }
     .btn-reset:hover { background-color: rgba(55, 53, 47, 0.05); }
 
-    .status-msg {
-      font-size: 0.8rem; color: rgba(55, 53, 47, 0.5);
-      font-weight: 600; text-transform: uppercase;
-      margin-bottom: 8px; letter-spacing: 0.05em;
-    }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <div class="status-msg" id="status-text">FOCUS</div>
-    <div class="timer-display" id="time-display">25:00</div>
-
-    <div class="gauge-wrapper">
-      <svg class="progress-ring" width="40" height="40">
-        <circle class="progress-ring__circle progress-ring__bg" r="17" cx="20" cy="20"/>
-        <circle id="progress-fill" class="progress-ring__circle progress-ring__fill" r="17" cx="20" cy="20"/>
-      </svg>
-    </div>
-
-    <div class="btn-group">
-      <button class="btn btn-main" id="start-btn" onclick="startTimer()">Start</button>
-      <button class="btn btn-reset" onclick="resetTimer()">Reset</button>
-    </div>
-  </div>
-
-  <script>
-    // 전역 변수 설정
-    var FOCUS_TIME = 25 * 60;
-    var BREAK_TIME = 5 * 60;
-    var GREEN = '#4A7C59';
-    var ORANGE = '#F28C28';
     
-    var timeLeft = FOCUS_TIME;
-    var isRunning = false;
-    var isFocus = true;
-    var timerInterval = null;
-    var fullDashArray = 107; // r=17일 때 둘레값 하드코딩
+    <div id="selection-screen">
+      <div class="menu-title">Select Mode</div>
+      <button class="select-btn" onclick="setMode('pomodoro')">
+        🍅 Pomodoro
+      </button>
+      <button class="select-btn" onclick="setMode('stopwatch')">
+        ⏱️ Stopwatch
+      </button>
+    </div>
 
-    // 1. 화면 업데이트 함수
-    function updateScreen() {
-      // 시간 계산
-      var m = Math.floor(timeLeft / 60);
-      var s = timeLeft % 60;
-      var mStr = m < 10 ? "0" + m : m;
-      var sStr = s < 10 ? "0" + s : s;
-      
-      // DOM 요소 가져오기 (에러 방지)
-      var display = document.getElementById('time-display');
-      var fill = document.getElementById('progress-fill');
-      
-      if (display) display.innerText = mStr + ":" + sStr;
+    <div id="timer-screen">
+      <div class="timer-header">
+        <button class="back-btn" onclick="goBack()">← Back</button>
+        <span class="mode-badge" id="mode-badge">FOCUS</span>
+      </div>
 
-      // 게이지 계산
-      if (fill) {
-        var total = isFocus ? FOCUS_TIME : BREAK_TIME;
-        var offset = fullDashArray - (timeLeft / total) * fullDashArray;
-        fill.style.strokeDashoffset = offset;
-      }
-    }
+      <div class="timer-display" id="time-display">00:00</div>
 
-    // 2. 테마 변경 함수
-    function updateTheme() {
-      var status = document.getElementById('status-text');
-      var fill = document.getElementById('progress-fill');
-      var btn = document.getElementById('start-btn');
-
-      if (isFocus) {
-        if(status) status.innerText = "FOCUS";
-        if(fill) fill.style.stroke = GREEN;
-        if(btn) btn.style.backgroundColor = ORANGE;
-      } else {
-        if(status) status.innerText = "BREAK";
-        if(fill) fill.style.stroke = ORANGE;
-        if(btn) btn.style.backgroundColor = GREEN;
-      }
-    }
-
-    // 3. 타이머 로직
-    function tick() {
-      if (timeLeft > 0) {
-        timeLeft--;
-        updateScreen();
-      } else {
-        // 시간 종료
-        clearInterval(timerInterval);
-        isRunning = false;
-        
-        // 모드 전환
-        isFocus = !isFocus;
-        timeLeft = isFocus ? FOCUS_TIME : BREAK_TIME;
-        
-        updateTheme();
-        updateScreen();
-        updateBtnText();
-      }
-    }
-
-    // 4. 버튼 기능
-    function startTimer() {
-      if (isRunning) {
-        clearInterval(timerInterval);
-        isRunning = false;
-      } else {
-        timerInterval = setInterval(tick, 1000);
-        isRunning = true;
-      }
-      updateBtnText();
-    }
-
-    function resetTimer() {
-      clearInterval(timerInterval);
-      isRunning = false;
-      isFocus = true;
-      timeLeft = FOCUS_TIME;
-      
-      updateTheme();
-      updateScreen();
-      updateBtnText();
-    }
-
-    function updateBtnText() {
-      var btn = document.getElementById('start-btn');
-      if(btn) btn.innerText = isRunning ? "Pause" : "Start";
-    }
-
-    // 5. 초기 실행 (window.onload 사용)
-    window.onload = function() {
-      console.log("Widget Loaded"); // 디버깅용
-      updateTheme();
-      updateScreen();
-    };
-  </script>
-</body>
-</html>
+      <div class="gauge-wrapper">
+        <svg class="progress-ring" width="40" height="40">
+          <circle class="progress-ring__circle progress-ring__bg" r="17" cx="20" cy="20"/>
+          <circle id="progress-fill" class="progress
