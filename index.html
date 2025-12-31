@@ -8,34 +8,50 @@
   <style>
     /* CSS: 디자인 영역 */
     html, body {
-      background-color: transparent; /* 노션 배경에 자연스럽게 녹아들도록 투명 처리 */
-      font-family: 'Times New Roman', serif; /* 세리프 폰트 유지 */
+      background-color: transparent; 
+      font-family: 'Times New Roman', serif;
       margin: 0;
       padding: 0;
-      /* 화면 크기에 맞춰 비율 자동 조절 */
       font-size: calc(100vw / 10); 
     }
     
-    /* 위젯 전체 박스 디자인 */
     .container {
-      width: 9.2rem; /* 화면 꽉 차게 */
+      width: 9.2rem;
       margin: 0 auto;
       text-align: center;
       display: flex;
       align-items: center;
       justify-content: space-between;
       
-      /* ▼▼▼ 여기 색상을 바꿨습니다! ▼▼▼ */
-      background: #F2EBE3; /* 배경색: 따뜻한 크림 베이지 */
-      color: #4A4A4A; /* 글씨색: 진한 고동색 */
-      /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
+      background: #F2EBE3; /* 크림 베이지 */
+      color: #4A4A4A; /* 진한 고동색 */
 
       border-radius: .4rem;
       box-sizing: border-box;
+      
+      /* ▼▼▼ 서명을 위한 공간 확보 및 기준점 설정 ▼▼▼ */
       padding: .4rem;
+      padding-bottom: 0.7rem; /* 하단 여백 추가 */
+      position: relative; /* 서명 위치를 잡기 위한 기준점 */
+      /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
+      
       overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* 살짝 그림자를 주어 입체감 추가 */
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
+
+    /* ▼▼▼ 서명 스타일 추가 ▼▼▼ */
+    .signature {
+      position: absolute; /* 절대 위치 */
+      bottom: 0.15rem; /* 바닥에서 약간 띄움 */
+      left: 0;
+      width: 100%; /* 가로 전체 사용 (중앙 정렬 위해) */
+      text-align: center;
+      font-size: 0.22rem; /* 아주 작은 글씨 */
+      opacity: 0.4; /* 흐리게 처리해서 은은하게 */
+      letter-spacing: 0.05rem; /* 자간을 넓혀 고급스럽게 */
+      font-style: italic; /* 이탤릭체로 감성 더하기 */
+    }
+    /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
 
     #month {
       font-weight: bold;
@@ -43,7 +59,7 @@
       text-align: right;
       margin: 0;
       margin-bottom: 0.2rem;
-      opacity: 0.8; /* 월 이름은 살짝 연하게 */
+      opacity: 0.8;
     }
 
     .week-days {
@@ -57,7 +73,7 @@
       font-weight: bold;
       font-size: .4rem;
       margin-bottom: .2rem;
-      opacity: 0.6; /* 요일 헤더(S M T...)는 더 연하게 */
+      opacity: 0.6;
     }
 
     .week-days.week {
@@ -73,23 +89,20 @@
       text-align: center;
     }
 
-    /* ▼▼▼ 오늘 날짜 표시 디자인 변경 ▼▼▼ */
     .active {
-      background-color: #CBB7A3; /* 배경: 템플릿 구분선과 비슷한 따뜻한 브라운 */
-      color: #FFFFFF; /* 글씨: 화이트 */
+      background-color: #CBB7A3; 
+      color: #FFFFFF; 
       border-radius: 50%;
       font-weight: bold;
     }
-    /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
 
-    /* 왼쪽 큰 날짜 영역 */
     #d-day {
       width: 3rem;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      border-right: 1px solid rgba(74, 74, 74, 0.2); /* 구분선도 은은한 고동색으로 */
+      border-right: 1px solid rgba(74, 74, 74, 0.2);
       margin-right: 0.2rem;
       padding-right: 0.2rem;
     }
@@ -108,7 +121,6 @@
     .inner {
         flex-grow: 1;
     }
-
   </style>
 </head>
 <body>
@@ -121,52 +133,41 @@
       <div class="week-days head">
         <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
       </div>
-      <div id="calendar-body">
-        </div>
+      <div id="calendar-body"></div>
     </div>
-  </div>
+
+    <div class="signature">nomadplanner</div>
+    </div>
 
 <script type="text/javascript">
-  // JS: 기능 구현 (날짜 계산 로직 - 이전과 동일)
-  
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const week_days_full = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
   function renderCalendar() {
     const today = new Date();
     const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth(); // 0~11
+    const currentMonth = today.getMonth(); 
     const currentDate = today.getDate();
-    const currentDay = today.getDay(); // 0(일)~6(토)
+    const currentDay = today.getDay(); 
 
-    // 1. 왼쪽 패널 채우기
     const dDayContainer = document.getElementById("d-day");
     dDayContainer.innerHTML = `<h3>${week_days_full[currentDay]}</h3><h1>${currentDate}</h1>`;
 
-    // 2. 오른쪽 상단 월 표시
     document.getElementById("month").innerText = months[currentMonth];
 
-    // 3. 달력 날짜 계산
-    // 이번 달의 첫째 날이 무슨 요일인지?
     const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-    // 이번 달의 마지막 날짜가 며칠인지? (예: 28, 30, 31)
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
     const calendarBody = document.getElementById("calendar-body");
     let htmlContent = "";
     
-    // 주 단위로 행(row)을 만듭니다
     let dayCount = 1;
-    // 최대 6주까지 나올 수 있음
     for (let i = 0; i < 6; i++) {
         let rowHtml = '<div class="week-days week">';
-        
         for (let j = 0; j < 7; j++) {
-            // 첫 주이면서 시작 요일 전이거나, 날짜가 끝났으면 빈칸
             if ((i === 0 && j < firstDayOfMonth) || dayCount > daysInMonth) {
                 rowHtml += `<span></span>`;
             } else {
-                // 오늘 날짜인지 확인
                 let className = (dayCount === currentDate) ? "active" : "";
                 rowHtml += `<span class="${className}">${dayCount}</span>`;
                 dayCount++;
@@ -174,26 +175,20 @@
         }
         rowHtml += '</div>';
         htmlContent += rowHtml;
-
         if (dayCount > daysInMonth) break;
     }
-    
     calendarBody.innerHTML = htmlContent;
   }
 
-  // 실행
   renderCalendar();
   
-  // 화면 크기 조절을 위한 스크립트 (rem 단위 보정)
   function resize() {
-      // 윈도우 너비가 너무 크면 적당히 제한
       let width = window.innerWidth;
       if (width > 600) width = 600; 
       document.documentElement.style.fontSize = (width / 10) + 'px';
   }
   window.addEventListener('resize', resize);
   resize();
-
 </script>
 </body>
 </html>
