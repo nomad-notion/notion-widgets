@@ -1,0 +1,225 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.6">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="en"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;title&gt;One Focus Widget&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* 1. 폰트 및 기본 설정 */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>html, body {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>margin: 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>padding: 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>height: 100vh;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background-color: transparent; /* 노션 투명 배경 */</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-family: 'Times New Roman', serif; /* 캘린더와 같은 명조체 계열 */</p>
+<p class="p1"><span class="Apple-converted-space">      </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>justify-content: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>align-items: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>overflow: hidden;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* 2. 컨테이너 디자인 (캘린더와 통일감) */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.container {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>width: 95%;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>height: 90%;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background-color: #F2EBE3; /* 크림 베이지 */</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #4A4A4A; /* 진한 고동색 */</p>
+<p class="p1"><span class="Apple-converted-space">      </span>border-radius: 15px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>flex-direction: column;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>justify-content: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>align-items: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>text-align: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>position: relative;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>box-shadow: 0 4px 12px rgba(0,0,0,0.05);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>padding: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>box-sizing: border-box;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* 3. 입력 화면 (초기 상태) */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>#input-section {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>display: flex; /* 보이거나 안 보이게 JS로 제어 */</p>
+<p class="p1"><span class="Apple-converted-space">      </span>flex-direction: column;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>align-items: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>.question {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-size: 1.2rem;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>margin-bottom: 1.5rem;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-weight: bold;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>opacity: 0.8;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>input[type="text"] {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: transparent;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>border: none;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>border-bottom: 2px solid #4A4A4A; /* 밑줄 스타일 */</p>
+<p class="p1"><span class="Apple-converted-space">      </span>width: 80%;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-family: inherit;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-size: 1.5rem;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #333;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>text-align: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>padding: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>outline: none;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>margin-bottom: 2rem;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* 엔터키 안내 문구 */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.hint {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-size: 0.8rem;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>opacity: 0.5;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-family: sans-serif;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* 4. 결과 화면 (목표 확정 상태) */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>#display-section {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>display: none; /* 초기엔 숨김 */</p>
+<p class="p1"><span class="Apple-converted-space">      </span>flex-direction: column;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>align-items: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>justify-content: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>height: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>.mission-label {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-size: 0.9rem;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>letter-spacing: 0.1rem;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>text-transform: uppercase;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>opacity: 0.6;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>margin-bottom: 1rem;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-family: sans-serif;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>.mission-text {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-size: 2.2rem; /* 목표를 아주 크게! */</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-weight: bold;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>line-height: 1.2;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>margin-bottom: 2rem;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>word-break: keep-all; /* 단어 단위로 줄바꿈 */</p>
+<p class="p1"><span class="Apple-converted-space">      </span>max-width: 90%;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* 완료(리셋) 버튼 */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.finish-btn {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background-color: transparent;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>border: 1px solid #4A4A4A;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #4A4A4A;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>padding: 8px 16px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>border-radius: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cursor: pointer;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-family: sans-serif;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-size: 0.8rem;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>opacity: 0.6;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>transition: all 0.3s;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.finish-btn:hover {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background-color: #4A4A4A;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #F2EBE3;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>opacity: 1;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* 5. 하단 서명 (캘린더와 동일) */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.signature {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>position: absolute;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>bottom: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>text-align: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-size: 0.7rem;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-family: sans-serif;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>opacity: 0.3;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>letter-spacing: 0.05rem;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="container"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="input-section"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="question"&gt;What is your ONE Focus today?&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;input type="text" id="goalInput" placeholder="Write here..." autocomplete="off"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="hint"&gt;Press Enter to commit&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="display-section"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="mission-label"&gt;Today's Mission&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="mission-text" id="goalDisplay"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="finish-btn" onclick="resetGoal()"&gt;Done &amp; Reset&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="signature"&gt;NOMADPLANNER&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const inputSection = document.getElementById('input-section');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const displaySection = document.getElementById('display-section');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const goalInput = document.getElementById('goalInput');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const goalDisplay = document.getElementById('goalDisplay');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 1. 페이지 로드 시: 저장된 목표가 있는지 확인</p>
+<p class="p1"><span class="Apple-converted-space">    </span>window.onload = function() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const savedGoal = localStorage.getItem('myOneFocus');</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (savedGoal) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>// 저장된 게 있으면 -&gt; 전시 모드로 보여줌</p>
+<p class="p1"><span class="Apple-converted-space">        </span>showDisplayMode(savedGoal);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>// 저장된 게 없으면 -&gt; 입력 모드로 보여줌</p>
+<p class="p1"><span class="Apple-converted-space">        </span>showInputMode();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 2. 입력창에서 엔터 키를 눌렀을 때</p>
+<p class="p1"><span class="Apple-converted-space">    </span>goalInput.addEventListener('keypress', function (e) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (e.key === 'Enter' &amp;&amp; goalInput.value.trim() !== "") {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const goal = goalInput.value;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>localStorage.setItem('myOneFocus', goal); // 브라우저에 저장</p>
+<p class="p1"><span class="Apple-converted-space">        </span>showDisplayMode(goal);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 3. 화면 전환: 입력 모드 보여주기</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function showInputMode() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>inputSection.style.display = 'flex';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>displaySection.style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>goalInput.value = ""; // 입력창 비우기</p>
+<p class="p1"><span class="Apple-converted-space">      </span>goalInput.focus();<span class="Apple-converted-space">    </span>// 바로 입력할 수 있게 커서 두기</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 4. 화면 전환: 전시 모드 보여주기</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function showDisplayMode(text) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>inputSection.style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>displaySection.style.display = 'flex';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>goalDisplay.innerText = text;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 5. 완료(리셋) 버튼 눌렀을 때</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function resetGoal() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if(confirm("Did you complete this task?")) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>localStorage.removeItem('myOneFocus'); // 저장된 내용 삭제</p>
+<p class="p1"><span class="Apple-converted-space">        </span>showInputMode(); // 다시 입력 모드로 돌아가기</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
