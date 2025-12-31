@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dual Timer Pie</title>
+  <title>Timer Pie Final</title>
   <style>
-    /* 1. 레이아웃 설정 */
+    /* 1. 레이아웃 (무조건 화면 중앙 정렬) */
     html, body {
       margin: 0; padding: 0;
-      width: 100%; height: 100%;
+      width: 100%; height: 100vh;
       background-color: transparent;
       font-family: ui-sans-serif, -apple-system, sans-serif;
       display: flex; justify-content: center; align-items: center;
@@ -16,7 +16,7 @@
       color: #37352F;
     }
 
-    /* 2. 컨테이너 디자인 */
+    /* 2. 컨테이너 (무조건 보임 설정) */
     .container {
       width: 90%; max-width: 320px;
       background-color: #F7F6F3;
@@ -29,30 +29,32 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.03);
       position: relative;
       
-      /* 빈 화면 방지 */
-      visibility: visible; opacity: 1; min-height: 260px;
+      /* ★ 핵심: JS 에러가 나도 화면은 뜨게 강제함 ★ */
+      visibility: visible !important; opacity: 1 !important; 
+      min-height: 280px;
     }
 
-    /* === 선택 화면 === */
+    /* === 선택 화면 (기본값: 보임) === */
     #selection-screen {
-      display: flex; flex-direction: column; width: 100%; gap: 12px;
+      display: flex; /* CSS가 우선순위를 가짐 */
+      flex-direction: column; width: 100%; gap: 12px;
     }
-    .menu-title {
-      font-size: 1.1rem; font-weight: 700; margin-bottom: 5px; color: #37352F;
-    }
+
+    .menu-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; }
     .select-btn {
       padding: 14px; border-radius: 10px;
       border: 1px solid rgba(55, 53, 47, 0.1);
       background-color: white; color: #37352F;
       font-size: 1rem; font-weight: 600; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: transform 0.1s, background 0.2s;
+      transition: 0.2s;
     }
     .select-btn:hover { background-color: rgba(55, 53, 47, 0.04); transform: scale(1.02); }
 
-    /* === 타이머 화면 === */
+    /* === 타이머 화면 (기본값: 숨김) === */
     #timer-screen {
-      display: none; flex-direction: column; align-items: center; width: 100%;
+      display: none; /* JS로 활성화 */
+      flex-direction: column; align-items: center; width: 100%;
     }
 
     .timer-header {
@@ -61,10 +63,9 @@
     }
     .back-btn {
       background: none; border: none; cursor: pointer;
-      font-size: 0.85rem; color: rgba(55, 53, 47, 0.4); padding: 0; font-weight: 500;
+      font-size: 0.85rem; color: rgba(55, 53, 47, 0.4); padding: 0;
     }
     .back-btn:hover { color: #37352F; }
-
     .mode-badge {
       font-size: 0.7rem; font-weight: 800;
       padding: 4px 8px; border-radius: 6px;
@@ -72,46 +73,232 @@
     }
 
     .timer-display {
-      font-size: 3.2rem; font-weight: 800; color: #37352F;
+      font-size: 3.2rem; font-weight: 800;
       font-variant-numeric: tabular-nums; line-height: 1;
       margin-bottom: 15px;
     }
 
-    /* ★ 파이 차트형 게이지 (꽉 찬 원) ★ */
+    /* ★ 파이 차트 (Pie Chart) 디자인 ★ */
     .gauge-box {
-      position: relative; width: 50px; height: 50px;
+      position: relative; width: 60px; height: 60px;
       margin-bottom: 25px; display: flex; justify-content: center; align-items: center;
     }
     .progress-ring { transform: rotate(-90deg); width: 100%; height: 100%; }
     
     /* 배경 원 (연한 색) */
     .bg-ring { 
-      fill: none; stroke-width: 20; /* 반지름(10)의 2배 두께로 중심까지 채움 */
-      stroke: rgba(55, 53, 47, 0.06); 
+      fill: none; 
+      stroke: rgba(55, 53, 47, 0.08); 
+      stroke-width: 32; /* 반지름(16)의 2배 두께 = 꽉 찬 원 */
     }
     
     /* 채워지는 원 (색상) */
     .fill-ring {
       fill: none; 
-      stroke-width: 20; /* 반지름(10)의 2배 -> 꽉 찬 원 효과 */
-      stroke-linecap: butt; /* 끝을 직각으로 (파이 모양 유지) */
-      /* 둘레(2*pi*10) ≈ 63 */
-      stroke-dasharray: 63 63; 
-      stroke-dashoffset: 0;
+      stroke-width: 32; /* 꽉 찬 원 */
+      stroke-dasharray: 100 100; /* 둘레 100 기준 */
+      stroke-dashoffset: 0; 
       transition: stroke-dashoffset 0.3s linear;
     }
 
     /* 버튼 그룹 */
-    .btn-group { display: flex; gap: 8px; width: 100%; margin-bottom: 15px; }
+    .btn-group { display: flex; gap: 8px; width: 100%; margin-bottom: 20px; }
     .btn {
       flex: 1; padding: 10px; border-radius: 8px; border: none;
       font-size: 0.9rem; font-weight: 600; cursor: pointer;
-      transition: background 0.2s;
     }
     .btn-main { color: white; }
     .btn-reset { background-color: white; border: 1px solid rgba(55, 53, 47, 0.15); color: #37352F; }
-    .btn-reset:hover { background-color: rgba(55, 53, 47, 0.05); }
 
-    /* ★ 서명 (맨 하단) ★ */
+    /* 서명 */
     .signature {
-      margin-top: auto
+      font-size: 0.7rem; color: rgba(55, 53, 47, 0.3); font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <div id="selection-screen">
+      <div class="menu-title">Select Mode</div>
+      <button class="select-btn" onclick="app.start('pomodoro')">
+        <span>🍅</span> Pomodoro
+      </button>
+      <button class="select-btn" onclick="app.start('stopwatch')">
+        <span>⏱️</span> Stopwatch
+      </button>
+      <div class="signature" style="margin-top: 20px;">nomadplanner</div>
+    </div>
+
+    <div id="timer-screen">
+      <div class="timer-header">
+        <button class="back-btn" onclick="app.back()">← Back</button>
+        <span class="mode-badge" id="badge">FOCUS</span>
+      </div>
+
+      <div class="timer-display" id="display">25:00</div>
+
+      <div class="gauge-box">
+        <svg class="progress-ring" viewBox="0 0 32 32">
+          <circle class="bg-ring" r="8" cx="16" cy="16"></circle>
+          <circle id="ring-fill" class="fill-ring" r="8" cx="16" cy="16"></circle>
+        </svg>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-main" id="btn-toggle" onclick="app.toggle()">Start</button>
+        <button class="btn btn-reset" onclick="app.reset()">Reset</button>
+      </div>
+
+      <div class="signature">nomadplanner</div>
+    </div>
+
+  </div>
+
+  <script>
+    // === 안전한 앱 객체 생성 ===
+    var app = {
+      mode: 'pomodoro',
+      time: 1500, // 25분
+      active: false,
+      timerId: null,
+      isFocus: true,
+      
+      // 상수
+      POMO_SEC: 1500, // 25 * 60
+      BREAK_SEC: 300, // 5 * 60
+      FULL_DASH: 50.3, // r=8일 때 둘레 (2 * pi * 8)
+      
+      COLORS: {
+        POMO: '#4A7C59', // 녹색
+        BREAK: '#F28C28', // 주황
+        STOP: '#227C9D'  // 파랑
+      },
+
+      // 1. 모드 시작
+      start: function(mode) {
+        this.mode = mode;
+        document.getElementById('selection-screen').style.display = 'none';
+        document.getElementById('timer-screen').style.display = 'flex';
+        this.reset();
+      },
+
+      // 2. 뒤로 가기
+      back: function() {
+        clearInterval(this.timerId);
+        this.active = false;
+        document.getElementById('timer-screen').style.display = 'none';
+        document.getElementById('selection-screen').style.display = 'flex';
+      },
+
+      // 3. 토글 (Start/Pause)
+      toggle: function() {
+        if (this.active) {
+          clearInterval(this.timerId);
+          this.active = false;
+        } else {
+          this.timerId = setInterval(this.tick.bind(this), 1000);
+          this.active = true;
+        }
+        this.update();
+      },
+
+      // 4. 타이머 로직
+      tick: function() {
+        if (this.mode === 'pomodoro') {
+          if (this.time > 0) {
+            this.time--;
+          } else {
+            clearInterval(this.timerId);
+            this.active = false;
+            this.isFocus = !this.isFocus;
+            this.time = this.isFocus ? this.POMO_SEC : this.BREAK_SEC;
+            // 알림 기능 (필요시 주석 해제)
+            // alert("Time is up!");
+          }
+        } else {
+          // 스톱워치
+          this.time++;
+        }
+        this.update();
+      },
+
+      // 5. 리셋
+      reset: function() {
+        clearInterval(this.timerId);
+        this.active = false;
+        this.isFocus = true;
+        
+        if (this.mode === 'pomodoro') {
+          this.time = this.POMO_SEC;
+        } else {
+          this.time = 0;
+        }
+        this.update();
+      },
+
+      // 6. 화면 업데이트
+      update: function() {
+        // A. 시간 텍스트
+        var m = Math.floor(this.time / 60);
+        var s = this.time % 60;
+        var txt = (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+        document.getElementById('display').innerText = txt;
+
+        // B. 버튼 텍스트
+        var btn = document.getElementById('btn-toggle');
+        btn.innerText = this.active ? "Pause" : "Start";
+
+        // C. 게이지 & 색상
+        var ring = document.getElementById('ring-fill');
+        var badge = document.getElementById('badge');
+        var color = this.COLORS.POMO;
+
+        // 파이 차트 계산 (r=8, stroke=32로 꽉 채운 원)
+        // stroke-dasharray를 둘레(50.3)로 설정해야 함
+        ring.style.strokeDasharray = this.FULL_DASH + " " + this.FULL_DASH;
+
+        if (this.mode === 'pomodoro') {
+          var total = this.isFocus ? this.POMO_SEC : this.BREAK_SEC;
+          var offset = this.FULL_DASH - (this.time / total) * this.FULL_DASH;
+          ring.style.strokeDashoffset = offset;
+
+          if (this.isFocus) {
+            badge.innerText = "FOCUS";
+            color = this.COLORS.POMO;
+          } else {
+            badge.innerText = "BREAK";
+            color = this.COLORS.BREAK;
+          }
+        } else {
+          // 스톱워치 (60초마다 한 바퀴)
+          badge.innerText = "STOPWATCH";
+          color = this.COLORS.STOP;
+          var sec = this.time % 60;
+          var offset = this.FULL_DASH - (sec / 60) * this.FULL_DASH;
+          ring.style.strokeDashoffset = -offset; // 차오르는 방향
+        }
+
+        // 색상 적용
+        ring.style.stroke = color;
+        badge.style.color = color;
+        badge.style.backgroundColor = color + "20"; // 투명도 20%
+        
+        if (this.active) {
+          btn.style.backgroundColor = "#E0E0E0";
+          btn.style.color = "#888";
+        } else {
+          btn.style.backgroundColor = color;
+          btn.style.color = "white";
+        }
+      }
+    };
+
+    // 초기화 실행
+    window.onload = function() {
+      app.update();
+    };
+  </script>
+</body>
+</html>
