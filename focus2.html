@@ -3,186 +3,186 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>All-in-One Widget</title>
+  <title>Welcome Goal Widget</title>
   <style>
     /* 1. 폰트 및 기본 설정 */
     body {
       margin: 0; padding: 0;
       width: 100%; height: 100vh;
       background-color: transparent;
-      /* 노션 기본 폰트 스택 */
       font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
       display: flex; justify-content: center; align-items: center;
       overflow: hidden;
       color: #37352F;
     }
 
-    /* 2. 메인 컨테이너 */
+    /* 2. 메인 컨테이너 (좌우 배치 Flex) */
     .container {
-      width: 95%; height: 90%;
+      width: 90%; 
+      max-width: 650px; /* 전체 폭을 줄임 (컴팩트하게) */
+      height: auto;
+      min-height: 200px; /* 최소 높이 확보 */
       background-color: #F7F6F3; /* 노션 회색 배경 */
       border: 1px solid rgba(55, 53, 47, 0.09);
-      border-radius: 8px;
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: center;
-      text-align: center; position: relative;
-      padding: 20px 30px; box-sizing: border-box;
+      border-radius: 12px;
+      display: flex; /* 좌우 배치 핵심 */
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      overflow: hidden; /* 이미지가 둥근 모서리를 넘지 않게 */
+      position: relative;
     }
 
-    /* 3. 상단 날짜/시간 */
-    .datetime {
-      position: absolute; top: 15px; left: 20px;
-      font-size: 0.9rem; 
+    /* 3. [왼쪽] 이미지 영역 (20%) */
+    .image-section {
+      flex: 0 0 25%; /* 너비 25% 정도로 설정 (20%는 너무 좁을 수 있어서) */
+      background-color: #EBEAE8; /* 이미지 배경색 (선택사항) */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .char-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* 영역에 꽉 차게 */
+      /* 만약 이미지가 잘리는 게 싫으면 'contain'으로 바꾸세요 */
+    }
+
+    /* 4. [오른쪽] 콘텐츠 영역 (나머지) */
+    .content-section {
+      flex: 1;
+      padding: 25px 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start; /* 왼쪽 정렬 */
+      position: relative;
+    }
+
+    /* 5. 헤더 (Welcome + 날짜) */
+    .header-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #37352F;
+    }
+    
+    .header-date {
+      font-size: 0.9rem;
       color: rgba(55, 53, 47, 0.6);
       font-weight: 500;
+      margin-bottom: 25px; /* 목표 입력창과의 간격 */
     }
 
-    /* 4. [기능 1] 목표 입력/전시 영역 (중앙) */
+    /* 6. 목표(One Pick) 영역 */
     .goal-wrapper {
       width: 100%;
-      /* 이미지와 겹치지 않게 오른쪽 여백 확보 */
-      padding-right: 100px; 
-      box-sizing: border-box;
-      z-index: 10; /* 이미지보다 위에 오도록 */
     }
 
     /* 입력 모드 */
     #input-section {
-      display: flex; flex-direction: column; align-items: center;
+      display: flex; flex-direction: column; align-items: flex-start;
       width: 100%;
     }
-    .question {
-      font-size: 1.1rem; margin-bottom: 1rem;
-      font-weight: 600; color: #37352F;
-    }
+    
     input[type="text"] {
       background: transparent; border: none;
-      border-bottom: 1px solid rgba(55, 53, 47, 0.3);
-      width: 90%; font-family: inherit;
-      font-size: 1.3rem; color: #37352F;
-      text-align: center; padding: 5px;
-      outline: none; margin-bottom: 1rem;
+      border-bottom: 2px solid rgba(55, 53, 47, 0.2);
+      width: 95%; font-family: inherit;
+      font-size: 1.1rem; color: #37352F;
+      padding: 8px 0;
+      outline: none;
+      transition: border-color 0.3s;
     }
-    input::placeholder { color: rgba(55, 53, 47, 0.2); font-size: 1rem; }
-    .hint { font-size: 0.75rem; color: rgba(55, 53, 47, 0.4); }
+    input[type="text"]:focus {
+      border-bottom: 2px solid #37352F; /* 포커스 시 진하게 */
+    }
+    input::placeholder { color: rgba(55, 53, 47, 0.3); font-size: 1rem; }
+    .hint { font-size: 0.75rem; color: rgba(55, 53, 47, 0.4); margin-top: 6px; }
 
     /* 전시 모드 */
     #display-section {
       display: none; flex-direction: column;
-      align-items: center; justify-content: center;
+      align-items: flex-start; justify-content: center;
     }
     .mission-label {
-      font-size: 0.8rem; color: rgba(55, 53, 47, 0.5);
-      margin-bottom: 0.5rem; font-weight: 600;
+      font-size: 0.75rem; color: rgba(55, 53, 47, 0.5);
+      margin-bottom: 4px; font-weight: 600;
       text-transform: uppercase; letter-spacing: 0.05em;
     }
     .mission-text {
-      font-size: 1.8rem; font-weight: 700;
-      line-height: 1.2; margin-bottom: 1rem;
+      font-size: 1.5rem; font-weight: 700;
+      line-height: 1.3; margin-bottom: 12px;
       word-break: keep-all; color: #37352F;
     }
     .finish-btn {
-      background-color: white; 
-      border: 1px solid rgba(55, 53, 47, 0.16);
-      color: #37352F; padding: 4px 12px;
+      background-color: transparent; 
+      border: 1px solid rgba(55, 53, 47, 0.2);
+      color: #37352F; padding: 5px 12px;
       border-radius: 4px; cursor: pointer;
       font-family: inherit; font-size: 0.8rem;
       transition: all 0.2s ease;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
-    .finish-btn:hover { background-color: rgba(55, 53, 47, 0.04); }
+    .finish-btn:hover { background-color: rgba(55, 53, 47, 0.05); }
 
-    /* 5. [기능 2] 퇴근 게이지 (하단) */
-    .work-wrapper {
-      width: 100%;
-      margin-top: 30px; /* 목표 영역과의 간격 */
-      padding-right: 100px; /* 이미지 공간 확보 */
-      box-sizing: border-box;
-      display: flex; flex-direction: column; align-items: flex-start;
-    }
-    .progress-bg {
-      width: 100%; height: 8px;
-      background-color: rgba(55, 53, 47, 0.08);
-      border-radius: 4px; overflow: hidden;
-      margin-bottom: 6px;
-    }
-    .progress-fill {
-      height: 100%;
-      background-color: #37352F; /* 노션 검정 */
-      width: 0%; border-radius: 4px;
-      transition: width 1s linear;
-    }
-    .work-text {
-      font-size: 0.8rem; color: rgba(55, 53, 47, 0.6);
-      font-weight: 500;
-    }
-
-    /* 6. [기능 3] 캐릭터 이미지 (우측 하단) */
-    .char-img {
-      position: absolute;
-      bottom: 15px; right: 20px;
-      width: 100px; /* 이미지 크기 조절 */
-      height: auto;
-      z-index: 5;
-      /* 이미지가 너무 시선을 뺏지 않게 살짝 조절 가능 */
-      opacity: 0.95; 
-    }
-
-    /* 7. 서명 및 팝업 */
+    /* 7. 서명 & 팝업 */
     .signature {
-      position: absolute; bottom: 5px; left: 0; width: 100%;
-      text-align: center; font-size: 0.6rem;
-      color: rgba(55, 53, 47, 0.2); pointer-events: none;
+      position: absolute; bottom: 8px; right: 15px;
+      font-size: 0.6rem; color: rgba(55, 53, 47, 0.2);
     }
 
     #custom-modal {
       display: none; position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
-      background-color: rgba(255, 255, 255, 0.95);
-      border-radius: 8px; flex-direction: column;
-      justify-content: center; align-items: center; z-index: 999;
+      background-color: rgba(255, 255, 255, 0.96);
+      justify-content: center; align-items: center; 
+      flex-direction: column; z-index: 999;
+      border-radius: 12px;
     }
-    .modal-msg { font-size: 1rem; margin-bottom: 15px; font-weight: 600; }
+    .modal-msg { font-size: 1rem; margin-bottom: 15px; font-weight: 600; color: #37352F; }
     .modal-btn-group { display: flex; gap: 8px; }
     .modal-btn {
       padding: 6px 16px; border-radius: 4px; cursor: pointer;
-      font-family: inherit; font-size: 0.85rem; border: 1px solid rgba(55, 53, 47, 0.16);
+      font-family: inherit; font-size: 0.9rem; border: 1px solid rgba(55, 53, 47, 0.16);
     }
     .btn-yes { background-color: #37352F; color: white; border: 1px solid #37352F; }
     .btn-no { background-color: transparent; }
-    
-    /* 모바일 대응 */
+
+    /* 모바일 대응 (화면 좁을 때) */
     @media (max-width: 500px) {
-      .goal-wrapper, .work-wrapper { padding-right: 0; }
-      .char-img { display: none; } /* 화면 작으면 이미지 숨김 */
+      .container { flex-direction: column; max-width: 90%; }
+      .image-section { width: 100%; height: 120px; flex: none; }
+      .content-section { padding: 20px; }
     }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <div class="datetime" id="clock"></div>
-
-    <div class="goal-wrapper">
-      <div id="input-section">
-        <div class="question">오늘의 목표는?</div>
-        <input type="text" id="goalInput" placeholder="입력 후 엔터" autocomplete="off" onkeypress="handleEnter(event)">
-      </div>
-      <div id="display-section">
-        <div class="mission-label">TODAY'S GOAL</div>
-        <div class="mission-text" id="goalDisplay"></div>
-        <button class="finish-btn" onclick="openModal()">완료 & 초기화</button>
-      </div>
+    
+    <div class="image-section">
+      <img src="./worker.png" class="char-img" alt="Character">
     </div>
 
-    <div class="work-wrapper">
-      <div class="progress-bg">
-        <div class="progress-fill" id="progressBar"></div>
-      </div>
-      <div class="work-text" id="workText">계산 중...</div>
-    </div>
+    <div class="content-section">
+      
+      <div class="header-title">Welcome to Your Workspace</div>
+      <div class="header-date" id="clock">Loading...</div>
 
-    <img src="./stamp.png" class="char-img" alt="character">
+      <div class="goal-wrapper">
+        <div id="input-section">
+          <input type="text" id="goalInput" placeholder="오늘의 가장 중요한 목표는?" autocomplete="off" onkeypress="handleEnter(event)">
+          <div class="hint">입력 후 Enter</div>
+        </div>
+        <div id="display-section">
+          <div class="mission-label">TODAY'S FOCUS</div>
+          <div class="mission-text" id="goalDisplay"></div>
+          <button class="finish-btn" onclick="openModal()">완료 (Reset)</button>
+        </div>
+      </div>
+
+      <div class="signature">nomadplanner</div>
+    </div>
 
     <div id="custom-modal">
       <div class="modal-msg">목표를 완료하고 초기화할까요?</div>
@@ -192,65 +192,38 @@
       </div>
     </div>
 
-    <div class="signature">nomadplanner</div>
   </div>
 
   <script>
-    /* === 설정 === */
-    const WORK_START = 9; // 출근 9시
-    const WORK_END = 18;  // 퇴근 18시 (오후 6시)
-
-    /* === 안전한 저장소 (One Pick 로직) === */
+    /* 안전 저장소 로직 */
     let memoryStorage = "";
     function saveGoalSafe(val) { try { localStorage.setItem('myOneFocus', val); } catch(e) { memoryStorage = val; } }
     function getGoalSafe() { try { return localStorage.getItem('myOneFocus'); } catch(e) { return memoryStorage; } }
     function removeGoalSafe() { try { localStorage.removeItem('myOneFocus'); } catch(e) { memoryStorage = ""; } }
 
-    /* === 통합 업데이트 함수 (시계 + 퇴근게이지) === */
-    function updateAll() {
-      const now = new Date();
+    /* 시계 업데이트 (날짜/시간) */
+    function updateClock() {
+      const clockEl = document.getElementById('clock');
+      if(!clockEl) return;
       
-      // 1. 날짜/시간 업데이트
+      const now = new Date();
+      // 날짜 포맷: 1월 1일 (목)
       const month = now.getMonth() + 1;
       const date = now.getDate();
       const dayList = ['일', '월', '화', '수', '목', '금', '토'];
       const day = dayList[now.getDay()];
-      const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
       
-      const clockEl = document.getElementById('clock');
-      if(clockEl) clockEl.innerText = `${month}월 ${date}일 (${day}) ${timeStr}`;
+      // 시간 포맷: 오전 9:41
+      let hours = now.getHours();
+      let minutes = now.getMinutes();
+      const ampm = hours >= 12 ? '오후' : '오전';
+      hours = hours % 12; hours = hours ? hours : 12; 
+      minutes = minutes < 10 ? '0' + minutes : minutes; 
 
-      // 2. 퇴근 게이지 업데이트
-      const currentHour = now.getHours();
-      const currentMin = now.getMinutes();
-      const currentSec = now.getSeconds();
-
-      const totalSec = (WORK_END - WORK_START) * 3600;
-      let passedSec = 0;
-
-      if (currentHour >= WORK_START && currentHour < WORK_END) {
-        passedSec = (currentHour - WORK_START) * 3600 + (currentMin * 60) + currentSec;
-      } else if (currentHour >= WORK_END) {
-        passedSec = totalSec;
-      }
-
-      let percent = (passedSec / totalSec) * 100;
-      if (percent < 0) percent = 0;
-      if (percent > 100) percent = 100;
-
-      const bar = document.getElementById('progressBar');
-      const txt = document.getElementById('workText');
-      
-      if(bar) bar.style.width = `${percent}%`;
-      
-      if(txt) {
-        if (currentHour < WORK_START) txt.innerText = `출근 전입니다 ☕ (${Math.floor(percent)}%)`;
-        else if (percent >= 100) txt.innerText = `퇴근 시간입니다! 고생하셨어요 🎉`;
-        else txt.innerText = `퇴근까지 ${100 - Math.floor(percent)}% 남았어요 🔥`;
-      }
+      clockEl.innerText = `${month}월 ${date}일 (${day}), ${ampm} ${hours}:${minutes}`;
     }
 
-    /* === 목표(One Pick) 화면 제어 === */
+    /* 목표 기능 로직 */
     function showInputMode() {
       document.getElementById('input-section').style.display = 'flex';
       document.getElementById('display-section').style.display = 'none';
@@ -274,7 +247,7 @@
       }
     }
 
-    /* === 팝업 제어 === */
+    /* 팝업 로직 */
     function openModal() { document.getElementById('custom-modal').style.display = 'flex'; }
     function closeModal() { document.getElementById('custom-modal').style.display = 'none'; }
     function confirmReset() {
@@ -283,10 +256,10 @@
       showInputMode();
     }
 
-    /* === 초기화 (즉시 실행) === */
+    /* 초기화 */
     (function init() {
-      updateAll();
-      setInterval(updateAll, 1000); // 1초마다 갱신
+      updateClock();
+      setInterval(updateClock, 1000);
 
       const saved = getGoalSafe();
       if(saved) showDisplayMode(saved);
