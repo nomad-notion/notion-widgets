@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>One Focus Widget</title>
+  <style>
+    /* 1. 폰트 및 기본 설정 */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100vh;
+      background-color: transparent; /* 노션 투명 배경 */
+      font-family: 'Times New Roman', serif; /* 캘린더와 같은 명조체 계열 */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* 2. 컨테이너 디자인 (캘린더와 통일감) */
+    .container {
+      width: 95%;
+      height: 90%;
+      background-color: #F2EBE3; /* 크림 베이지 */
+      color: #4A4A4A; /* 진한 고동색 */
+      border-radius: 15px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    /* 3. 입력 화면 (초기 상태) */
+    #input-section {
+      display: flex; /* 보이거나 안 보이게 JS로 제어 */
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    .question {
+      font-size: 1.2rem;
+      margin-bottom: 1.5rem;
+      font-weight: bold;
+      opacity: 0.8;
+    }
+
+    input[type="text"] {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid #4A4A4A; /* 밑줄 스타일 */
+      width: 80%;
+      font-family: inherit;
+      font-size: 1.5rem;
+      color: #333;
+      text-align: center;
+      padding: 10px;
+      outline: none;
+      margin-bottom: 2rem;
+    }
+
+    /* 엔터키 안내 문구 */
+    .hint {
+      font-size: 0.8rem;
+      opacity: 0.5;
+      font-family: sans-serif;
+    }
+
+    /* 4. 결과 화면 (목표 확정 상태) */
+    #display-section {
+      display: none; /* 초기엔 숨김 */
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    .mission-label {
+      font-size: 0.9rem;
+      letter-spacing: 0.1rem;
+      text-transform: uppercase;
+      opacity: 0.6;
+      margin-bottom: 1rem;
+      font-family: sans-serif;
+    }
+
+    .mission-text {
+      font-size: 2.2rem; /* 목표를 아주 크게! */
+      font-weight: bold;
+      line-height: 1.2;
+      margin-bottom: 2rem;
+      word-break: keep-all; /* 단어 단위로 줄바꿈 */
+      max-width: 90%;
+    }
+
+    /* 완료(리셋) 버튼 */
+    .finish-btn {
+      background-color: transparent;
+      border: 1px solid #4A4A4A;
+      color: #4A4A4A;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-family: sans-serif;
+      font-size: 0.8rem;
+      opacity: 0.6;
+      transition: all 0.3s;
+    }
+    .finish-btn:hover {
+      background-color: #4A4A4A;
+      color: #F2EBE3;
+      opacity: 1;
+    }
+
+    /* 5. 하단 서명 (캘린더와 동일) */
+    .signature {
+      position: absolute;
+      bottom: 10px;
+      width: 100%;
+      text-align: center;
+      font-size: 0.7rem;
+      font-family: sans-serif;
+      opacity: 0.3;
+      letter-spacing: 0.05rem;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <div id="input-section">
+      <div class="question">What is your ONE Focus today?</div>
+      <input type="text" id="goalInput" placeholder="Write here..." autocomplete="off">
+      <div class="hint">Press Enter to commit</div>
+    </div>
+
+    <div id="display-section">
+      <div class="mission-label">Today's Mission</div>
+      <div class="mission-text" id="goalDisplay"></div>
+      <button class="finish-btn" onclick="resetGoal()">Done & Reset</button>
+    </div>
+
+    <div class="signature">NOMADPLANNER</div>
+
+  </div>
+
+  <script>
+    const inputSection = document.getElementById('input-section');
+    const displaySection = document.getElementById('display-section');
+    const goalInput = document.getElementById('goalInput');
+    const goalDisplay = document.getElementById('goalDisplay');
+
+    // 1. 페이지 로드 시: 저장된 목표가 있는지 확인
+    window.onload = function() {
+      const savedGoal = localStorage.getItem('myOneFocus');
+      
+      if (savedGoal) {
+        // 저장된 게 있으면 -> 전시 모드로 보여줌
+        showDisplayMode(savedGoal);
+      } else {
+        // 저장된 게 없으면 -> 입력 모드로 보여줌
+        showInputMode();
+      }
+    };
+
+    // 2. 입력창에서 엔터 키를 눌렀을 때
+    goalInput.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter' && goalInput.value.trim() !== "") {
+        const goal = goalInput.value;
+        localStorage.setItem('myOneFocus', goal); // 브라우저에 저장
+        showDisplayMode(goal);
+      }
+    });
+
+    // 3. 화면 전환: 입력 모드 보여주기
+    function showInputMode() {
+      inputSection.style.display = 'flex';
+      displaySection.style.display = 'none';
+      goalInput.value = ""; // 입력창 비우기
+      goalInput.focus();    // 바로 입력할 수 있게 커서 두기
+    }
+
+    // 4. 화면 전환: 전시 모드 보여주기
+    function showDisplayMode(text) {
+      inputSection.style.display = 'none';
+      displaySection.style.display = 'flex';
+      goalDisplay.innerText = text;
+    }
+
+    // 5. 완료(리셋) 버튼 눌렀을 때
+    function resetGoal() {
+      if(confirm("Did you complete this task?")) {
+        localStorage.removeItem('myOneFocus'); // 저장된 내용 삭제
+        showInputMode(); // 다시 입력 모드로 돌아가기
+      }
+    }
+  </script>
+</body>
+</html>
