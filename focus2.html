@@ -1,177 +1,225 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome Widget (Notion Style)</title>
+  <title>One Focus Widget (Notion Style)</title>
   <style>
-    /* 1. 폰트 및 기본 설정 (노션 기본 산세리프 폰트 적용) */
+    /* 1. 노션 기본 폰트 및 스타일 적용 */
     body {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+      margin: 0; padding: 0;
+      width: 100%; height: 100vh;
       background-color: transparent;
-      /* 노션에서 사용하는 기본 폰트 스택 */
+      /* 노션과 100% 동일한 폰트 스택 */
       font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      display: flex; justify-content: center; align-items: center;
+      overflow: hidden;
       color: #37352F; /* 노션 기본 텍스트 색상 */
     }
 
-    /* 2. 전체 박스 디자인 (노션 콜아웃 블록 스타일) */
-    .widget-container {
-      width: 95%;
-      max-width: 900px;
-      /* 노션 라이트 모드 콜아웃 배경색 */
-      background-color: #F7F6F3; 
-      /* 노션 스타일의 얇고 은은한 테두리 */
-      border: 1px solid rgba(55, 53, 47, 0.09);
-      border-radius: 4px; /* 둥글기를 살짝만 줌 */
-      padding: 24px; /* 패딩 조절 */
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    /* 2. 컨테이너: 노션 콜아웃 블록 느낌 */
+    .container {
+      width: 95%; height: 90%;
+      background-color: #F7F6F3; /* 노션 회색 배경 */
+      border: 1px solid rgba(55, 53, 47, 0.09); /* 얇은 테두리 */
+      border-radius: 6px; /* 살짝만 둥글게 */
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      text-align: center; position: relative;
+      padding: 24px; box-sizing: border-box;
     }
 
-    /* 3. 왼쪽 텍스트 영역 */
-    .text-section {
-      flex: 2;
-      padding-right: 20px;
+    /* 3. 시계: 상단에 작고 깔끔하게 */
+    .datetime {
+      position: absolute; top: 20px;
+      font-size: 0.9rem; 
+      color: rgba(55, 53, 47, 0.65); /* 보조 텍스트 색상 */
+      font-weight: 500;
+      letter-spacing: 0;
     }
 
-    h1 {
-      margin: 0 0 8px 0; /* 하단 여백 줄임 */
-      font-size: 1.5rem; /* H1 크기 조절 */
-      font-weight: 700;
+    /* 4. 입력 화면 */
+    #input-section {
+      display: flex; flex-direction: column; align-items: center;
+      width: 100%; margin-top: 10px;
+    }
+
+    .question {
+      font-size: 1.2rem; margin-bottom: 1.2rem;
+      font-weight: 600; 
       color: #37352F;
-      line-height: 1.3;
+      word-break: keep-all;
     }
 
-    .date-time {
-      font-size: 1rem;
-      margin-bottom: 20px;
-      color: rgba(55, 53, 47, 0.65); /* 노션 보조 텍스트 색상 (연한 회색) */
-      font-weight: 400;
+    input[type="text"] {
+      background: transparent; border: none;
+      /* 밑줄도 노션스럽게 얇고 연하게 */
+      border-bottom: 1px solid rgba(55, 53, 47, 0.3);
+      width: 80%; font-family: inherit;
+      font-size: 1.4rem; color: #37352F;
+      text-align: center; padding: 8px;
+      outline: none; margin-bottom: 1.5rem;
+      font-weight: 500;
+    }
+    input::placeholder { color: rgba(55, 53, 47, 0.3); font-size: 1rem; }
+    .hint { font-size: 0.8rem; color: rgba(55, 53, 47, 0.5); }
+
+    /* 5. 결과 화면 */
+    #display-section {
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center;
+      width: 100%; height: 100%; margin-top: 10px;
     }
 
-    /* 4. 프로그레스 바 (더 심플하게) */
-    .progress-container {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .mission-label {
+      font-size: 0.85rem; color: rgba(55, 53, 47, 0.6);
+      margin-bottom: 0.8rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.05em;
     }
 
-    .progress-bar-bg {
-      width: 240px; /* 길이 약간 줄임 */
-      height: 8px; /* 두께 얇게 */
-      background-color: rgba(55, 53, 47, 0.09); /* 아주 연한 회색 배경 */
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .progress-bar-fill {
-      height: 100%;
-      background-color: #37352F; /* 노션 기본 검정색으로 채움 */
-      width: 0%;
-      border-radius: 4px;
-      transition: width 0.5s ease;
-    }
-
-    .progress-text {
-      font-size: 0.9rem;
+    .mission-text {
+      font-size: 2rem; font-weight: 700;
+      line-height: 1.3; margin-bottom: 1.5rem;
+      word-break: keep-all; max-width: 90%;
       color: #37352F;
     }
 
-    /* 5. 오른쪽 이미지 영역 */
-    .image-section {
-      flex: 1;
-      display: flex;
-      justify-content: flex-end;
+    /* 버튼 디자인: 노션 버튼 스타일 */
+    .finish-btn {
+      background-color: transparent; 
+      border: 1px solid rgba(55, 53, 47, 0.16);
+      color: #37352F; padding: 6px 16px;
+      border-radius: 4px; cursor: pointer;
+      font-family: inherit; font-size: 0.85rem;
+      transition: all 0.2s ease;
+    }
+    .finish-btn:hover { 
+      background-color: rgba(55, 53, 47, 0.08); 
     }
 
-    .image-section img {
-      max-width: 160px; /* 이미지 크기 약간 조절 */
-      height: auto;
-      object-fit: contain;
-      /* 이미지가 너무 튀지 않게 살짝 투명도 조절 (선택사항) */
-      opacity: 0.9; 
+    /* 6. 서명: 아주 연하게 */
+    .signature {
+      position: absolute; bottom: 12px;
+      width: 100%; text-align: center;
+      font-size: 0.7rem; color: rgba(55, 53, 47, 0.3);
+      font-weight: 500;
     }
 
-    /* 모바일 대응 */
-    @media (max-width: 600px) {
-      .widget-container {
-        flex-direction: column-reverse;
-        text-align: center;
-        padding: 20px;
-      }
-      .image-section { margin-bottom: 20px; justify-content: center; }
-      .progress-container { flex-direction: column; }
-      .progress-bar-bg { width: 100%; }
+    /* 7. 팝업(모달): 깔끔한 디자인 */
+    #custom-modal {
+      display: none; position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      /* 배경을 살짝 불투명하게 덮음 */
+      background-color: rgba(255, 255, 255, 0.96);
+      border-radius: 6px; flex-direction: column;
+      justify-content: center; align-items: center; z-index: 999;
     }
+    .modal-msg { font-size: 1.1rem; margin-bottom: 20px; font-weight: 600; color: #37352F; }
+    .modal-btn-group { display: flex; gap: 10px; }
+    .modal-btn {
+      padding: 6px 20px; border-radius: 4px; cursor: pointer;
+      font-family: inherit; font-size: 0.9rem; border: 1px solid rgba(55, 53, 47, 0.16);
+    }
+    /* "네" 버튼: 노션의 주요 액션 색상(검정/다크그레이) */
+    .btn-yes { background-color: #37352F; color: #FFFFFF; border: 1px solid #37352F; }
+    /* "아니오" 버튼: 투명 */
+    .btn-no { background-color: transparent; color: #37352F; }
+    .btn-no:hover { background-color: rgba(55, 53, 47, 0.08); }
   </style>
 </head>
 <body>
 
-  <div class="widget-container">
-    <div class="text-section">
-      <h1>오늘도 힘차게 시작해볼까요?</h1>
-      <div class="date-time" id="clock">Loading time...</div>
-      
-      <div class="progress-container">
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill" id="progressBar"></div>
-        </div>
-        <div class="progress-text" id="progressText">0%</div>
+  <div class="container">
+    <div class="datetime" id="clock"></div>
+    
+    <div id="input-section">
+      <div class="question">오늘 집중할 단 하나의 목표는?</div>
+      <input type="text" id="goalInput" placeholder="목표 입력" autocomplete="off" onkeypress="handleEnter(event)">
+      <div class="hint">엔터를 누르면 목표가 고정됩니다</div>
+    </div>
+
+    <div id="display-section">
+      <div class="mission-label">Today's Mission</div>
+      <div class="mission-text" id="goalDisplay"></div>
+      <button class="finish-btn" onclick="openModal()">완료했습니다! (초기화)</button>
+    </div>
+
+    <div id="custom-modal">
+      <div class="modal-msg">정말 목표를 완료하고 초기화할까요?</div>
+      <div class="modal-btn-group">
+        <button class="modal-btn btn-yes" onclick="confirmReset()">네</button>
+        <button class="modal-btn btn-no" onclick="closeModal()">아니오</button>
       </div>
     </div>
 
-    <div class="image-section">
-      <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/People/Person%20Technologist.png" alt="User Image">
-    </div>
+    <div class="signature">nomadplanner</div>
   </div>
 
   <script>
-    function updateWidget() {
+    /* 로직은 기존의 강력한(bulletproof) 버전을 그대로 사용 */
+    
+    let memoryStorage = "";
+    function saveGoalSafe(val) { try { localStorage.setItem('myOneFocus', val); } catch(e) { memoryStorage = val; } }
+    function getGoalSafe() { try { return localStorage.getItem('myOneFocus'); } catch(e) { return memoryStorage; } }
+    function removeGoalSafe() { try { localStorage.removeItem('myOneFocus'); } catch(e) { memoryStorage = ""; } }
+
+    function updateClock() {
+      const clockEl = document.getElementById('clock');
+      if(!clockEl) return;
+      
       const now = new Date();
+      const month = now.getMonth() + 1;
+      const date = now.getDate();
+      let hours = now.getHours();
+      let minutes = now.getMinutes();
+      const ampm = hours >= 12 ? '오후' : '오전';
       
-      // 날짜 포맷을 좀 더 노션스럽게 간결하게 변경
-      const options = { weekday: 'long', month: 'long', day: 'numeric' };
-      const dateStr = now.toLocaleDateString('en-US', options);
-      const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-      
-      // 문구 변경: "오늘은 [요일], [월] [일] 입니다. 현재 시간 [시간]"
-      document.getElementById('clock').innerText = `${dateStr}, ${timeStr}`;
+      hours = hours % 12; hours = hours ? hours : 12; 
+      minutes = minutes < 10 ? '0' + minutes : minutes; 
 
-      // 업무 시간 (9시~18시) 설정
-      const startHour = 9;
-      const endHour = 18; 
-      
-      const currentHour = now.getHours();
-      const currentMin = now.getMinutes();
-      
-      const totalWorkMinutes = (endHour - startHour) * 60;
-      const elapsedMinutes = ((currentHour - startHour) * 60) + currentMin;
-      
-      let percentage = Math.floor((elapsedMinutes / totalWorkMinutes) * 100);
-      if (percentage < 0) percentage = 0;
-      if (percentage > 100) percentage = 100;
-
-      document.getElementById('progressBar').style.width = `${percentage}%`;
-      
-      // 멘트도 좀 더 심플하게
-      let message = "집중!";
-      if (percentage >= 100) message = "고생하셨습니다! 🎉";
-      else if (percentage > 50) message = "절반 지났어요";
-      else if (percentage < 10) message = "하루 시작";
-
-      // 화살표 대신 심플하게 퍼센트와 멘트만 표시
-      document.getElementById('progressText').innerHTML = `${percentage}% (${message})`;
+      // 노션 스타일 날짜 포맷 (깔끔하게)
+      clockEl.innerText = `${month}월 ${date}일 ${ampm} ${hours}:${minutes}`;
     }
 
-    setInterval(updateWidget, 1000);
-    updateWidget();
+    function showInputMode() {
+      document.getElementById('input-section').style.display = 'flex';
+      document.getElementById('display-section').style.display = 'none';
+      const input = document.getElementById('goalInput');
+      if(input) { input.value = ""; input.focus(); }
+    }
+
+    function showDisplayMode(text) {
+      document.getElementById('input-section').style.display = 'none';
+      document.getElementById('display-section').style.display = 'flex';
+      document.getElementById('goalDisplay').innerText = text;
+    }
+
+    function handleEnter(e) {
+      if (e.key === 'Enter') {
+        const val = e.target.value;
+        if(val.trim() !== "") {
+          saveGoalSafe(val);
+          showDisplayMode(val);
+        }
+      }
+    }
+
+    function openModal() { document.getElementById('custom-modal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('custom-modal').style.display = 'none'; }
+    function confirmReset() {
+      removeGoalSafe();
+      closeModal();
+      showInputMode();
+    }
+
+    // 즉시 실행 (깜빡임 방지)
+    (function init() {
+      updateClock();
+      setInterval(updateClock, 1000);
+      const saved = getGoalSafe();
+      if(saved) showDisplayMode(saved);
+      else showInputMode();
+    })();
   </script>
 </body>
 </html>
