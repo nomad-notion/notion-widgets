@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>One Focus Widget (Final)</title>
+  <title>One Focus Widget (Safe)</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap');
 
@@ -46,7 +46,6 @@
       letter-spacing: -0.5px;
     }
 
-    /* 입력 모드 */
     #input-section {
       display: flex;
       flex-direction: column;
@@ -88,7 +87,6 @@
       font-family: sans-serif;
     }
 
-    /* 전시 모드 */
     #display-section {
       display: none;
       flex-direction: column;
@@ -145,33 +143,33 @@
       text-transform: uppercase;
     }
 
-    /* ▼▼▼ 커스텀 팝업(모달) 디자인 추가 ▼▼▼ */
+    /* 팝업(모달) 스타일 */
     #custom-modal {
-      display: none; /* 평소엔 숨김 */
+      display: none;
       position: absolute;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background-color: rgba(242, 235, 227, 0.95); /* 배경색과 같은 톤으로 덮음 */
+      background-color: rgba(242, 235, 227, 0.98);
       border-radius: 15px;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      z-index: 10;
+      z-index: 999; /* 제일 위에 뜨도록 설정 */
     }
 
     .modal-msg {
       font-size: 1.1rem;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
       font-weight: bold;
     }
 
     .modal-btn-group {
       display: flex;
-      gap: 10px;
+      gap: 15px;
     }
 
     .modal-btn {
-      padding: 8px 20px;
+      padding: 10px 25px;
       border-radius: 20px;
       cursor: pointer;
       font-family: sans-serif;
@@ -188,15 +186,13 @@
       background-color: transparent;
       color: #4A4A4A;
     }
-    /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
-
   </style>
 </head>
 <body>
 
   <div class="container">
     
-    <div class="datetime" id="clock">로딩 중...</div>
+    <div class="datetime" id="clock">날짜 불러오는 중...</div>
     
     <div id="input-section">
       <div class="question">오늘 집중할 단 하나의 목표는?</div>
@@ -207,53 +203,52 @@
     <div id="display-section">
       <div class="mission-label">오늘의 미션</div>
       <div class="mission-text" id="goalDisplay"></div>
-      <button class="finish-btn" onclick="openModal()">완료했습니다! (초기화)</button>
+      <button class="finish-btn" id="openModalBtn">완료했습니다! (초기화)</button>
     </div>
 
     <div id="custom-modal">
-      <div class="modal-msg">정말 목표를 초기화할까요?</div>
+      <div class="modal-msg">정말 목표를 완료하고 초기화할까요?</div>
       <div class="modal-btn-group">
-        <button class="modal-btn btn-yes" onclick="confirmReset()">네</button>
-        <button class="modal-btn btn-no" onclick="closeModal()">아니오</button>
+        <button class="modal-btn btn-yes" id="confirmResetBtn">네</button>
+        <button class="modal-btn btn-no" id="closeModalBtn">아니오</button>
       </div>
     </div>
+
     <div class="signature">NOMADPLANNER</div>
 
   </div>
 
   <script>
-    /* 시계 */
-    function updateClock() {
-      const now = new Date();
-      const month = now.getMonth() + 1;
-      const date = now.getDate();
-      let hours = now.getHours();
-      let minutes = now.getMinutes();
-      const ampm = hours >= 12 ? '오후' : '오전';
-      hours = hours % 12;
-      hours = hours ? hours : 12; 
-      minutes = minutes < 10 ? '0' + minutes : minutes; 
-      const timeString = `오늘은 ${month}월 ${date}일, ${ampm} ${hours}시 ${minutes}분입니다`;
-      document.getElementById('clock').innerText = timeString;
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
+    // 모든 기능은 화면이 로딩된 후에 시작합니다 (안전장치)
+    window.addEventListener('DOMContentLoaded', function() {
+      
+      // 1. 요소 가져오기
+      const clockEl = document.getElementById('clock');
+      const inputSection = document.getElementById('input-section');
+      const displaySection = document.getElementById('display-section');
+      const goalInput = document.getElementById('goalInput');
+      const goalDisplay = document.getElementById('goalDisplay');
+      const customModal = document.getElementById('custom-modal');
+      
+      // 버튼들 연결
+      document.getElementById('openModalBtn').addEventListener('click', openModal);
+      document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+      document.getElementById('confirmResetBtn').addEventListener('click', confirmReset);
 
-    /* 원픽 기능 */
-    const inputSection = document.getElementById('input-section');
-    const displaySection = document.getElementById('display-section');
-    const goalInput = document.getElementById('goalInput');
-    const goalDisplay = document.getElementById('goalDisplay');
-    const customModal = document.getElementById('custom-modal');
+      // 2. 시계 기능
+      function updateClock() {
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const date = now.getDate();
+        
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
+        const ampm = hours >= 12 ? '오후' : '오전';
+        
+        hours = hours % 12;
+        hours = hours ? hours : 12; 
+        minutes = minutes < 10 ? '0' + minutes : minutes; 
 
-    window.onload = function() {
-      const savedGoal = localStorage.getItem('myOneFocus');
-      if (savedGoal) {
-        showDisplayMode(savedGoal);
-      } else {
-        showInputMode();
-      }
-      updateClock();
-    };
-
-    goalInput.addEventListener('keypress', function (e
+        if(clockEl) {
+          clockEl.innerText = `오늘은 ${month}월 ${date}일, ${ampm} ${hours}시 ${minutes}분입니다`;
+        }
