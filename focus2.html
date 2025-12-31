@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>One Focus Widget (Safe)</title>
+  <title>Focus Widget (Bulletproof)</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap');
 
+    /* 1. 기본 레이아웃 */
     html, body {
       margin: 0;
       padding: 0;
@@ -20,6 +21,7 @@
       overflow: hidden;
     }
 
+    /* 2. 메인 컨테이너 */
     .container {
       width: 95%;
       height: 90%;
@@ -37,6 +39,7 @@
       box-sizing: border-box;
     }
 
+    /* 3. 시계 영역 */
     .datetime {
       position: absolute;
       top: 25px;
@@ -46,6 +49,7 @@
       letter-spacing: -0.5px;
     }
 
+    /* 4. 입력 화면 */
     #input-section {
       display: flex;
       flex-direction: column;
@@ -76,17 +80,10 @@
       margin-bottom: 2rem;
     }
     
-    input::placeholder {
-      color: #aaa;
-      font-size: 1rem;
-    }
+    input::placeholder { color: #aaa; font-size: 1rem; }
+    .hint { font-size: 0.8rem; opacity: 0.5; font-family: sans-serif; }
 
-    .hint {
-      font-size: 0.8rem;
-      opacity: 0.5;
-      font-family: sans-serif;
-    }
-
+    /* 5. 결과 화면 */
     #display-section {
       display: none;
       flex-direction: column;
@@ -131,6 +128,7 @@
       opacity: 1;
     }
 
+    /* 6. 서명 */
     .signature {
       position: absolute;
       bottom: 10px;
@@ -143,7 +141,7 @@
       text-transform: uppercase;
     }
 
-    /* 팝업(모달) 스타일 */
+    /* 7. 팝업(모달) */
     #custom-modal {
       display: none;
       position: absolute;
@@ -154,7 +152,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      z-index: 999; /* 제일 위에 뜨도록 설정 */
+      z-index: 999;
     }
 
     .modal-msg {
@@ -163,10 +161,7 @@
       font-weight: bold;
     }
 
-    .modal-btn-group {
-      display: flex;
-      gap: 15px;
-    }
+    .modal-btn-group { display: flex; gap: 15px; }
 
     .modal-btn {
       padding: 10px 25px;
@@ -177,78 +172,30 @@
       border: 1px solid #4A4A4A;
     }
 
-    .btn-yes {
-      background-color: #4A4A4A;
-      color: #F2EBE3;
-    }
-    
-    .btn-no {
-      background-color: transparent;
-      color: #4A4A4A;
-    }
+    .btn-yes { background-color: #4A4A4A; color: #F2EBE3; }
+    .btn-no { background-color: transparent; color: #4A4A4A; }
   </style>
 </head>
 <body>
 
   <div class="container">
     
-    <div class="datetime" id="clock">날짜 불러오는 중...</div>
+    <div class="datetime" id="clock">시계 로딩 중...</div>
     
     <div id="input-section">
       <div class="question">오늘 집중할 단 하나의 목표는?</div>
-      <input type="text" id="goalInput" placeholder="여기에 적어보세요" autocomplete="off">
+      <input type="text" id="goalInput" placeholder="여기에 적어보세요" autocomplete="off" onkeypress="handleEnter(event)">
       <div class="hint">엔터를 누르면 목표가 고정됩니다</div>
     </div>
 
     <div id="display-section">
       <div class="mission-label">오늘의 미션</div>
       <div class="mission-text" id="goalDisplay"></div>
-      <button class="finish-btn" id="openModalBtn">완료했습니다! (초기화)</button>
+      <button class="finish-btn" onclick="openModal()">완료했습니다! (초기화)</button>
     </div>
 
     <div id="custom-modal">
       <div class="modal-msg">정말 목표를 완료하고 초기화할까요?</div>
       <div class="modal-btn-group">
-        <button class="modal-btn btn-yes" id="confirmResetBtn">네</button>
-        <button class="modal-btn btn-no" id="closeModalBtn">아니오</button>
-      </div>
-    </div>
-
-    <div class="signature">NOMADPLANNER</div>
-
-  </div>
-
-  <script>
-    // 모든 기능은 화면이 로딩된 후에 시작합니다 (안전장치)
-    window.addEventListener('DOMContentLoaded', function() {
-      
-      // 1. 요소 가져오기
-      const clockEl = document.getElementById('clock');
-      const inputSection = document.getElementById('input-section');
-      const displaySection = document.getElementById('display-section');
-      const goalInput = document.getElementById('goalInput');
-      const goalDisplay = document.getElementById('goalDisplay');
-      const customModal = document.getElementById('custom-modal');
-      
-      // 버튼들 연결
-      document.getElementById('openModalBtn').addEventListener('click', openModal);
-      document.getElementById('closeModalBtn').addEventListener('click', closeModal);
-      document.getElementById('confirmResetBtn').addEventListener('click', confirmReset);
-
-      // 2. 시계 기능
-      function updateClock() {
-        const now = new Date();
-        const month = now.getMonth() + 1;
-        const date = now.getDate();
-        
-        let hours = now.getHours();
-        let minutes = now.getMinutes();
-        const ampm = hours >= 12 ? '오후' : '오전';
-        
-        hours = hours % 12;
-        hours = hours ? hours : 12; 
-        minutes = minutes < 10 ? '0' + minutes : minutes; 
-
-        if(clockEl) {
-          clockEl.innerText = `오늘은 ${month}월 ${date}일, ${ampm} ${hours}시 ${minutes}분입니다`;
-        }
+        <button class="modal-btn btn-yes" onclick="confirmReset()">네</button>
+        <button class="modal-btn btn
