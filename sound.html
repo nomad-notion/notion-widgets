@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>White Noise Widget</title>
+  <style>
+    /* 1. 기본 설정 */
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100vh;
+      background-color: transparent;
+      font-family: ui-sans-serif, -apple-system, sans-serif;
+      display: flex; justify-content: center; align-items: center;
+      overflow: hidden;
+      color: #37352F;
+    }
+
+    /* 2. 메인 컨테이너 */
+    .container {
+      width: 95%; max-width: 500px; /* 가로로 넓게 */
+      background-color: #F7F6F3;
+      border: 1px solid rgba(55, 53, 47, 0.09);
+      border-radius: 16px;
+      display: flex;
+      align-items: center; justify-content: space-between; /* 좌우 배분 */
+      padding: 24px 30px; box-sizing: border-box;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+      gap: 30px; /* 좌우 간격 */
+    }
+
+    /* === [왼쪽] 타이머 영역 === */
+    .timer-section {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      flex: 1;
+    }
+
+    .timer-display {
+      font-size: 3.5rem; font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: #37352F; margin-bottom: 20px;
+      line-height: 1;
+    }
+
+    .timer-controls {
+      display: flex; gap: 12px;
+    }
+
+    .btn-circle {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: 1px solid rgba(55, 53, 47, 0.15);
+      background-color: white;
+      color: #37352F;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .btn-circle:hover { background-color: rgba(55, 53, 47, 0.05); transform: translateY(-1px); }
+    .btn-circle:active { transform: translateY(1px); }
+    
+    .btn-play { color: #4A7C59; border-color: #4A7C59; } /* 재생 버튼 녹색 */
+
+    /* === [오른쪽] 사운드 믹서 영역 (그리드) === */
+    .sound-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr; /* 2열 */
+      gap: 15px;
+      flex: 1.2;
+    }
+
+    .sound-card {
+      background-color: white;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      border: 1px solid rgba(55, 53, 47, 0.06);
+      transition: box-shadow 0.2s;
+    }
+    .sound-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+    .icon-box {
+      font-size: 1.5rem; margin-bottom: 10px; opacity: 0.8;
+    }
+
+    /* 슬라이더 커스텀 */
+    input[type=range] {
+      -webkit-appearance: none; width: 100%;
+      background: transparent; cursor: pointer;
+    }
+    input[type=range]:focus { outline: none; }
+    
+    /* 슬라이더 트랙 */
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%; height: 4px; cursor: pointer;
+      background: #E0E0E0; border-radius: 2px;
+    }
+    /* 슬라이더 핸들(동그라미) */
+    input[type=range]::-webkit-slider-thumb {
+      height: 14px; width: 14px; border-radius: 50%;
+      background: #37352F; cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -5px; /* 트랙 중앙 정렬 */
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    /* 활성화된 슬라이더 색상 (JS로 제어) */
+    .active-slider::-webkit-slider-runnable-track {
+      background: #4A7C59;
+    }
+
+    /* 서명 */
+    .signature {
+      position: absolute; bottom: 8px; right: 0; left: 0;
+      text-align: center; font-size: 0.7rem; color: rgba(55, 53, 47, 0.2);
+      pointer-events: none;
+    }
+
+    /* 모바일 대응 */
+    @media (max-width: 480px) {
+      .container { flex-direction: column; padding: 20px; }
+      .sound-grid { width: 100%; }
+      .timer-section { margin-bottom: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <div class="timer-section">
+      <div class="timer-display" id="time-display">25:00</div>
+      <div class="timer-controls">
+        <button class="btn-circle btn-play" onclick="toggleTimer()" id="btn-play">▶</button>
+        <button class="btn-circle" onclick="resetTimer()">↺</button>
+      </div>
+    </div>
+
+    <div class="sound-grid">
+      
+      <div class="sound-card">
+        <div class="icon-box">🌧️</div>
+        <input type="range" min="0" max="100" value="0" oninput="setVolume('rain', this)">
+        <audio id="audio-rain" loop src="https://assets.mixkit.co/sfx/preview/mixkit-light-rain-loop-2393.mp3"></audio>
+      </div>
+
+      <div class="sound-card">
+        <div class="icon-box">🔥</div>
+        <input type="range" min="0" max="100" value="0" oninput="setVolume('fire', this)">
+        <audio id="audio-fire" loop src="https://assets.mixkit.co/sfx/preview/mixkit-campfire-crackles-1330.mp3"></audio>
+      </div>
+
+      <div class="sound-card">
+        <div class="icon-box">🌲</div>
+        <input type="range" min="0" max="100" value="0" oninput="setVolume('forest', this)">
+        <audio id="audio-forest" loop src="https://assets.mixkit.co/sfx/preview/mixkit-forest-birds-ambience-1210.mp3"></audio>
+      </div>
+
+      <div class="sound-card">
+        <div class="icon-box">☕</div>
+        <input type="range" min="0" max="100" value="0" oninput="setVolume('cafe', this)">
+        <audio id="audio-cafe" loop src="https://assets.mixkit.co/sfx/preview/mixkit-restaurant-crowd-talking-ambience-44.mp3"></audio>
+      </div>
+
+    </div>
+
+    <div class="signature">nomadplanner</div>
+  </div>
+
+  <script>
+    // === 타이머 로직 ===
+    var time = 25 * 60;
+    var timerId = null;
+    var isRunning = false;
+
+    function updateDisplay() {
+      var m = Math.floor(time / 60);
+      var s = time % 60;
+      var txt = (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+      document.getElementById('time-display').innerText = txt;
+    }
+
+    function toggleTimer() {
+      var btn = document.getElementById('btn-play');
+      if (isRunning) {
+        clearInterval(timerId);
+        isRunning = false;
+        btn.innerText = "▶";
+      } else {
+        timerId = setInterval(function() {
+          if (time > 0) {
+            time--;
+            updateDisplay();
+          } else {
+            clearInterval(timerId);
+            isRunning = false;
+            alert("집중 시간 종료! 👏");
+          }
+        }, 1000);
+        isRunning = true;
+        btn.innerText = "❚❚";
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerId);
+      isRunning = false;
+      time = 25 * 60;
+      document.getElementById('btn-play').innerText = "▶";
+      updateDisplay();
+    }
+
+    // === 오디오 믹서 로직 ===
+    function setVolume(type, slider) {
+      var audio = document.getElementById('audio-' + type);
+      var vol = slider.value / 100;
+      
+      // 오디오 볼륨 설정
+      if(audio) {
+        audio.volume = vol;
+        
+        // 볼륨이 0보다 크면 재생, 0이면 일시정지
+        if (vol > 0 && audio.paused) {
+          audio.play();
+        } else if (vol === 0) {
+          audio.pause();
+        }
+      }
+
+      // 슬라이더 디자인 (활성화 시 색상 변경)
+      if (vol > 0) {
+        slider.style.background = 'linear-gradient(to right, #4A7C59 ' + slider.value + '%, #E0E0E0 ' + slider.value + '%)';
+      } else {
+        slider.style.background = '#E0E0E0';
+      }
+    }
+  </script>
+</body>
+</html>
