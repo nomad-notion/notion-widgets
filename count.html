@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Notion Countdown Widget</title>
+  <style>
+    :root{
+      --bg: #ffffff;
+      --fg: #111827;
+      --muted:#6b7280;
+      --card:#f3f4f6;
+      --accent:#111827;
+      --radius: 18px;
+    }
+    [data-theme="dark"]{
+      --bg:#0b1220;
+      --fg:#e5e7eb;
+      --muted:#94a3b8;
+      --card:#111827;
+      --accent:#e5e7eb;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      background: transparent; /* 노션 임베드 배경 깔끔 */
+      color: var(--fg);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height: 100vh;
+      padding: 18px;
+    }
+    .wrap{
+      width: min(560px, 100%);
+      background: var(--bg);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+      overflow:hidden;
+      border: 1px solid rgba(0,0,0,.06);
+    }
+    .top{
+      padding: 18px 18px 14px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      justify-content:space-between;
+    }
+    .title{
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      line-height: 1.2;
+    }
+    .subtitle{
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .badge{
+      font-size:12px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: var(--card);
+      color: var(--muted);
+      white-space: nowrap;
+      user-select:none;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 0 18px 18px;
+    }
+    .cell{
+      background: var(--card);
+      border-radius: 14px;
+      padding: 14px 12px;
+      text-align:center;
+    }
+    .num{
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.6px;
+    }
+    .label{
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .bar{
+      height: 10px;
+      background: rgba(0,0,0,.06);
+      border-radius: 999px;
+      overflow:hidden;
+      margin: 0 18px 18px;
+    }
+    [data-theme="dark"] .bar{ background: rgba(255,255,255,.08); }
+    .bar > div{
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      border-radius: 999px;
+      transition: width .3s ease;
+    }
+    .footer{
+      padding: 0 18px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .small{
+      opacity:.9;
+    }
+    .done{
+      padding: 18px;
+      display:none;
+    }
+    .done h2{
+      margin: 0 0 6px;
+      font-size: 18px;
+      letter-spacing: -0.2px;
+    }
+    .done p{
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    @media (max-width:420px){
+      .grid{ grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap" id="app">
+    <div class="top">
+      <div>
+        <div class="title" id="title">Countdown</div>
+        <div class="subtitle" id="subtitle">목표 날짜를 향해 카운트다운 중</div>
+      </div>
+      <div class="badge" id="badge">—</div>
+    </div>
+
+    <div class="grid" id="grid">
+      <div class="cell"><div class="num" id="d">0</div><div class="label">DAYS</div></div>
+      <div class="cell"><div class="num" id="h">0</div><div class="label">HOURS</div></div>
+      <div class="cell"><div class="num" id="m">0</div><div class="label">MIN</div></div>
+      <div class="cell"><div class="num" id="s">0</div><div class="label">SEC</div></div>
+    </div>
+
+    <div class="bar" aria-hidden="true">
+      <div id="progress"></div>
+    </div>
+
+    <div class="footer">
+      <div class="small" id="targetText">Target: —</div>
+      <div class="small" id="tzText">Time: local</div>
+    </div>
+
+    <div class="done" id="done">
+      <h2 id="doneTitle">🎉 D-Day!</h2>
+      <p id="doneMsg">목표 날짜에 도착했어요.</p>
+    </div>
+  </div>
+
+<script>
+  // --- Helpers
+  const $ = (id) => document.getElementById(id);
+
+  function getParam(name, fallback=null){
+    const url = new URL(location.href);
+    return url.searchParams.get(name) ?? fallback;
+  }
+
+  function pad2(n){ return String(n).padStart(2,'0'); }
+
+  function parseTarget(param){
+    // Accept:
+    // 1) ISO datetime: 2026-01-18T15:00:00+07:00
+    // 2) Date only:    2026-01-18 (interpreted as 00:00 local)
+    // 3) Datetime no tz: 2026-01-18 15:00  (local)
+    if(!param) return null;
+
+    // Replace space with T for Date parsing convenience
+    const normalized = param.trim().replace(' ', 'T');
+
+    // If only YYYY-MM-DD, keep as local midnight by constructing parts
+    const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(normalized);
+    if(dateOnly){
+      const [y,mo,d] = normalized.split('-').map(Number);
+      return new Date(y, mo-1, d, 0, 0, 0);
+    }
+    const dt = new Date(normalized);
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+
+  function formatTarget(dt){
+    const y = dt.getFullYear();
+    const mo = pad2(dt.getMonth()+1);
+    const d = pad2(dt.getDate());
+    const hh = pad2(dt.getHours());
+    const mm = pad2(dt.getMinutes());
+    return `${y}-${mo}-${d} ${hh}:${mm}`;
+  }
+
+  // --- Config via URL
+  // Example:
+  // ?title=Project%20D-Day&target=2026-02-01&theme=dark&subtitle=Launch%20in...
+  const title = getParam('title', 'Countdown');
+  const subtitle = getParam('subtitle', '목표 날짜를 향해 카운트다운 중');
+  const theme = (getParam('theme', 'light') || 'light').toLowerCase();
+  const targetRaw = getParam('target', '');
+  const startRaw = getParam('start', ''); // optional progress start date
+
+  const target = parseTarget(targetRaw);
+  const start = parseTarget(startRaw);
+
+  // Apply theme
+  document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+
+  // Apply title/subtitle
+  $('title').textContent = title;
+  $('subtitle').textContent = subtitle;
+
+  // If invalid target: show usage
+  if(!target){
+    $('badge').textContent = '⚠️ 설정 필요';
+    $('targetText').textContent = 'Target: ?target=YYYY-MM-DD';
+    $('tzText').textContent = '예: ?title=My%20D-Day&target=2026-01-18';
+    $('grid').style.opacity = 0.5;
+    $('progress').style.width = '0%';
+    throw new Error('Missing or invalid target parameter');
+  }
+
+  $('badge').textContent = '⏳ RUNNING';
+  $('targetText').textContent = `Target: ${formatTarget(target)}`;
+
+  // Show timezone hint
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  $('tzText').textContent = `TZ: ${tz}`;
+
+  // Progress calculation:
+  // if start is given, progress is (now-start)/(target-start).
+  // otherwise, progress is within last 30 days window for a nice feel.
+  function computeProgress(now){
+    const end = target.getTime();
+    const n = now.getTime();
+
+    let st;
+    if(start) st = start.getTime();
+    else st = end - (30 * 24 * 60 * 60 * 1000); // 30 days before target
+
+    if(n <= st) return 0;
+    if(n >= end) return 1;
+    return (n - st) / (end - st);
+  }
+
+  function tick(){
+    const now = new Date();
+    const diffMs = target.getTime() - now.getTime();
+
+    if(diffMs <= 0){
+      $('badge').textContent = '✅ DONE';
+      $('grid').style.display = 'none';
+      $('done').style.display = 'block';
+      $('doneTitle').textContent = `🎉 ${title}`;
+      $('doneMsg').textContent = '목표 날짜에 도착했어요.';
+      $('progress').style.width = '100%';
+      return;
+    }
+
+    const totalSec = Math.floor(diffMs / 1000);
+    const days = Math.floor(totalSec / (24*3600));
+    const hours = Math.floor((totalSec % (24*3600)) / 3600);
+    const mins = Math.floor((totalSec % 3600) / 60);
+    const secs = totalSec % 60;
+
+    $('d').textContent = days;
+    $('h').textContent = hours;
+    $('m').textContent = mins;
+    $('s').textContent = secs;
+
+    const p = computeProgress(now);
+    $('progress').style.width = `${Math.round(p * 100)}%`;
+
+    requestAnimationFrame(() => setTimeout(tick, 250)); // smooth-ish update
+  }
+
+  tick();
+</script>
+</body>
+</html>
