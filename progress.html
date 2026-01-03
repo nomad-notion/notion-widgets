@@ -1,59 +1,245 @@
-lets(
-	/* 1. 현재 시간 및 기준 설정 */
-	now, now(),
-	
-	/* 2. 정확한 시작 시점 계산 (시간 단위 정밀도 향상) */
-	/* 연초: 올해-01-01 00:00 */
-	startYear, parseDate(format(year(now)) + "-01-01"), 
-	/* 월초: 이번달-01 00:00 (날짜에서 일수만큼 빼서 계산) */
-	startMonth, dateSubtract(dateSubtract(now, date(now) - 1, "days"), hour(now) * 60 + minute(now), "minutes"),
-	/* 주초: 이번주 일요일(또는 설정값) 00:00 */
-	startWeek, dateSubtract(dateSubtract(now, day(now), "days"), hour(now) * 60 + minute(now), "minutes"),
-	/* 일초: 오늘 00:00 */
-	startDay, dateSubtract(dateSubtract(now, hour(now), "hours"), minute(now), "minutes"),
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion Style Countdown</title>
+    <style>
+        /* 1. 노션 컬러 팔레트 정의 */
+        :root {
+            --fg: #37352f;          /* 노션 기본 텍스트 */
+            --muted: #787774;       /* 노션 회색 텍스트 */
+            --accent: #37352f;      /* 강조색 (검정) */
+            --bar-bg: rgba(55, 53, 47, 0.08); /* 프로그레스바 배경 */
+        }
 
-	/* 3. 다음 시점 계산 (종료 지점) */
-	nextYear, dateAdd(startYear, 1, "years"),
-	nextMonth, dateAdd(startMonth, 1, "months"),
-	nextWeek, dateAdd(startWeek, 1, "weeks"),
-	nextDay, dateAdd(startDay, 1, "days"),
+        /* 다크모드 대응 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --fg: #d4d4d4;
+                --muted: #9b9a97;
+                --accent: #ffffff;
+                --bar-bg: rgba(255, 255, 255, 0.1);
+            }
+        }
 
-	/* 4. 퍼센트 정밀 계산 (모두 '분' 단위 차이로 계산하여 통일) */
-	pctYear, round(dateBetween(now, startYear, "minutes") / dateBetween(nextYear, startYear, "minutes") * 1000) / 10,
-	pctMonth, round(dateBetween(now, startMonth, "minutes") / dateBetween(nextMonth, startMonth, "minutes") * 1000) / 10,
-	pctWeek, round(dateBetween(now, startWeek, "minutes") / dateBetween(nextWeek, startWeek, "minutes") * 1000) / 10,
-	pctDay, round(dateBetween(now, startDay, "minutes") / dateBetween(nextDay, startDay, "minutes") * 1000) / 10,
+        * { box-sizing: border-box; }
 
-	/* 5. 디자인 설정 */
-	iconFull, style("▓ ", "blue"),    
-	iconEmpty, style("░ ", "grey"),    
-	iconProgress, style("▒ ", "grey"),
-	headerStyle, "grey",
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple SD Gothic Neo", sans-serif;
+            background-color: transparent; /* 배경 투명 */
+            color: var(--fg);
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* 세로 중앙 정렬 */
+            height: 100vh;
+            overflow: hidden;
+        }
 
-	/* 6. 출력 */
-	style(format(year(now)) + "년의 " + format(dateBetween(now, startYear, "days") + 1).style("blue", "b") + "번째 날이에요.", "b", headerStyle) + "\n\n" +
-	
-	lets(
-		result, pctYear,
-		finished, floor(result / 10), unfinished, floor((100 - result) / 10), inProgress, 10 - finished - unfinished,
-		repeat(iconFull, finished) + if(inProgress > 0, iconProgress, "") + repeat(iconEmpty, unfinished) + style(" Year: " + format(result) + "%",  "grey" ,"i")
-	) + "\n" +
-	
-	lets(
-		result, pctMonth,
-		finished, floor(result / 10), unfinished, floor((100 - result) / 10), inProgress, 10 - finished - unfinished,
-		repeat(iconFull, finished) + if(inProgress > 0, iconProgress, "") + repeat(iconEmpty, unfinished) + style(" Month: " + format(result) + "%",  "grey" ,"i") 
-	) + "\n" +
+        .container {
+            width: 100%;
+            padding: 0 20px; /* 좌우 여백 */
+            max-width: 600px;
+            margin: 0 auto;
+        }
 
-	lets(
-		result, pctWeek,
-		finished, floor(result / 10), unfinished, floor((100 - result) / 10), inProgress, 10 - finished - unfinished,
-		repeat(iconFull, finished) + if(inProgress > 0, iconProgress, "") + repeat(iconEmpty, unfinished) + style(" Week: " + format(result) + "%",  "grey" ,"i") 
-	) + "\n" +
+        /* 타이틀 영역 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 12px;
+        }
 
-	lets(
-		result, pctDay,
-		finished, floor(result / 10), unfinished, floor((100 - result) / 10), inProgress, 10 - finished - unfinished,
-		repeat(iconFull, finished) + if(inProgress > 0, iconProgress, "") + repeat(iconEmpty, unfinished) + style(" Day: " + format(result) + "%", "grey" ,"i") 
-	)
-)
+        .title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .d-day-badge {
+            font-size: 0.9rem;
+            color: var(--muted);
+            font-weight: 500;
+            background: var(--bar-bg);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        /* 숫자 그리드 (박스 제거, 숫자 강조) */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            text-align: left; /* 노션은 주로 왼쪽 정렬 */
+            margin-bottom: 16px;
+        }
+
+        .num {
+            font-size: 2.2rem;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+        }
+
+        .label {
+            font-size: 0.75rem;
+            color: var(--muted);
+            font-weight: 500;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* 프로그레스 바 (노션 스타일로 얇게) */
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: var(--bar-bg);
+            border-radius: 99px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--accent);
+            border-radius: 99px;
+            transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .footer {
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        /* 완료 상태 */
+        .done-message {
+            display: none;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            animation: popUp 0.5s ease;
+        }
+
+        @keyframes popUp {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+        <div class="header">
+            <div class="title" id="title">Countdown</div>
+            <div class="d-day-badge" id="d-badge">D-Day</div>
+        </div>
+
+        <div class="grid" id="grid">
+            <div><div class="num" id="d">0</div><div class="label">Days</div></div>
+            <div><div class="num" id="h">0</div><div class="label">Hours</div></div>
+            <div><div class="num" id="m">0</div><div class="label">Mins</div></div>
+            <div><div class="num" id="s">0</div><div class="label">Secs</div></div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progress"></div>
+        </div>
+
+        <div class="footer">
+            <span id="targetText">Target Date</span>
+            <span id="percentText">0%</span>
+        </div>
+
+        <div class="done-message" id="done">
+            🎉 목표 달성!
+        </div>
+    </div>
+
+    <script>
+        // 🛠️ 여기에 목표 날짜를 직접 수정해도 됩니다! (YYYY-MM-DD 형식)
+        // URL 파라미터가 없으면 이 날짜가 기본값이 됩니다.
+        const DEFAULT_TARGET = "2026-01-01"; 
+        const DEFAULT_TITLE = "올해 남은 시간";
+
+        // --- 기능 로직 ---
+        const $ = (id) => document.getElementById(id);
+        const getParam = (name) => new URL(location.href).searchParams.get(name);
+
+        // 1. 설정값 파싱
+        const titleParam = getParam('title') || DEFAULT_TITLE;
+        const targetParam = getParam('target') || DEFAULT_TARGET;
+        
+        // 날짜 파싱 (단순 날짜만 있으면 자정 기준으로 설정)
+        let targetDate = new Date(targetParam);
+        if (targetParam.length === 10) { 
+            targetDate = new Date(targetParam + "T00:00:00");
+        }
+
+        // 화면 초기 세팅
+        $('title').innerText = titleParam;
+        $('targetText').innerText = targetDate.toLocaleDateString();
+
+        // 유효하지 않은 날짜일 경우
+        if (isNaN(targetDate.getTime())) {
+            $('title').innerText = "날짜 설정 오류";
+            $('targetText').innerText = "YYYY-MM-DD 형식으로 입력하세요";
+        }
+
+        // 2. 카운트다운 함수
+        function tick() {
+            const now = new Date();
+            const diff = targetDate - now;
+
+            // 완료 시
+            if (diff <= 0) {
+                $('grid').style.display = 'none';
+                $('done').style.display = 'block';
+                $('progress').style.width = '100%';
+                $('percentText').innerText = "100%";
+                $('d-badge').innerText = "Done";
+                return;
+            }
+
+            // 시간 계산
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const mins = Math.floor((diff / (1000 * 60)) % 60);
+            const secs = Math.floor((diff / 1000) % 60);
+
+            // 화면 표시
+            $('d').innerText = days;
+            $('h').innerText = hours;
+            $('m').innerText = mins;
+            $('s').innerText = secs;
+            $('d-badge').innerText = `D-${days}`;
+
+            // 프로그레스 바 계산 (오늘 기준으로 30일 전부터 시작한다고 가정하여 시각화)
+            // *시작 날짜(?start=)가 없으면, 마감 30일 전을 0%로 잡습니다.
+            const startParam = getParam('start');
+            let startDate = startParam ? new Date(startParam) : new Date(targetDate.getTime() - (30 * 24 * 60 * 60 * 1000));
+            
+            let totalDuration = targetDate - startDate;
+            let passed = now - startDate;
+            let percent = (passed / totalDuration) * 100;
+
+            if (percent < 0) percent = 0;
+            if (percent > 100) percent = 100;
+
+            $('progress').style.width = `${percent}%`;
+            $('percentText').innerText = `${Math.round(percent)}%`;
+
+            requestAnimationFrame(tick);
+        }
+
+        tick();
+    </script>
+</body>
+</html>
